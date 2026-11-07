@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS - Login | Early Warning System</title>
+  <meta name="description"
+    content="Biñan Integrated National High School - Web-Based Students Academic Standing Using Predictive Analytics and Parent SMS Notification System.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --green-900: #0F2A1C;
+      --green-800: #123524;
+      --green-700: #166534;
+      --green-600: #15803D;
+      --green-500: #16A34A;
+      --green-400: #22C55E;
+      --amber: #F59E0B;
+      --white: #FFFFFF;
+      --text: #0F172A;
+      --text-2: #475569;
+      --muted: #94A3B8;
+      --border: #E2E8F0;
+      --bg: #F8FAFC;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --shadow-lg: 0 20px 40px rgba(15, 42, 28, 0.18), 0 4px 12px rgba(15, 42, 28, 0.10);
+    }
+
+    html,
+    body {
+      min-height: 100vh;
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a1f12 0%, #123524 40%, #1b4332 70%, #0d2b1a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%;
+      right: -10%;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.12) 0%, transparent 70%);
+      animation: float 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -20%;
+      left: -10%;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+      animation: float 10s ease-in-out infinite reverse;
+      pointer-events: none;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-30px) scale(1.05);
+      }
+    }
+
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      animation: twinkle var(--dur, 4s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    @keyframes twinkle {
+
+      0%,
+      100% {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.5);
+      }
+    }
+
+    .login-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      max-width: 900px;
+      background: var(--white);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      z-index: 1;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(32px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-left {
+      background: linear-gradient(160deg, #0F2A1C 0%, #123524 50%, #1B4332 100%);
+      padding: 52px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-left::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .login-left::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: -40px;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.07);
+    }
+
+    .left-brand {
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-badge {
+      width: 64px;
+      height: 64px;
+      background: rgba(21, 128, 61, 0.3);
+      border: 1.5px solid rgba(245, 158, 11, 0.5);
+      border-radius: 18px;
+      padding: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-badge svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+    }
+
+    .brand-name {
+      font-size: 32px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .brand-full {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: rgba(167, 243, 208, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      line-height: 1.4;
+    }
+
+    .left-tagline {
+      position: relative;
+      z-index: 1;
+      margin-top: 36px;
+    }
+
+    .tagline-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    .tagline-desc {
+      font-size: 14px;
+      color: rgba(167, 243, 208, 0.65);
+      line-height: 1.65;
+    }
+
+    .left-footer {
+      margin-top: 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .left-footer p {
+      font-size: 12px;
+      color: rgba(148, 163, 184, 0.5);
+      line-height: 1.5;
+    }
+
+    .login-right {
+      padding: 52px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #FFFFFF;
+    }
+
+    .login-heading {
+      margin-bottom: 28px;
+    }
+
+    .login-heading h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.4px;
+      margin-bottom: 6px;
+    }
+
+    .login-heading p {
+      font-size: 14px;
+      color: var(--text-2);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 7px;
+    }
+
+    .form-input-wrap {
+      position: relative;
+    }
+
+    .form-input-wrap .input-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      display: flex;
+    }
+
+    .form-input-wrap input {
+      width: 100%;
+      padding: 12px 13px 12px 40px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--bg);
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .form-input-wrap input:focus {
+      border-color: var(--green-600);
+      background: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+    }
+
+    .form-input-wrap input::placeholder {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .toggle-pw {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0;
+      display: flex;
+      transition: color 0.2s;
+    }
+
+    .toggle-pw:hover {
+      color: var(--green-600);
+    }
+
+    .form-options {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .form-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .form-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--green-600);
+      cursor: pointer;
+    }
+
+    .form-check span {
+      font-size: 13px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+
+    .form-footer {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .form-footer p {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--green-600) 0%, var(--green-700) 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.08);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-login:hover::before {
+      opacity: 1;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(21, 128, 61, 0.35);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .btn-login.loading .btn-text {
+      opacity: 0;
+    }
+
+    .btn-login .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #FFFFFF;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      position: absolute;
+      display: none;
+    }
+
+    .btn-login.loading .spinner {
+      display: block;
+    }
+
+    .btn-create-account {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      margin-top: 12px;
+    }
+
+    .btn-create-account:hover {
+      background: var(--bg);
+      border-color: var(--green-600);
+      color: var(--green-600);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .error-msg {
+      display: none;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #DC2626;
+      font-weight: 500;
+      margin-bottom: 14px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .error-msg.show {
+      display: flex;
+    }
+
+    .demo-hint {
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .demo-hint>p {
+      font-size: 12px;
+      color: var(--text-2);
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .demo-hint>p svg {
+      color: var(--green-600);
+      flex-shrink: 0;
+    }
+
+    .demo-accounts {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .demo-account {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .demo-account:hover {
+      border-color: var(--green-600);
+      background: #F0FDF4;
+    }
+
+    .demo-account .acct-role {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .demo-account .acct-creds {
+      font-size: 11.5px;
+      font-family: monospace;
+      color: var(--text-2);
+    }
+
+    .demo-account .use-btn {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green-600);
+    }
+
+    @media (max-width: 680px) {
+      .login-wrap {
+        grid-template-columns: 1fr;
+        max-width: 440px;
+      }
+
+      .login-left {
+        display: none;
+      }
+
+      .login-right {
+        padding: 40px 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="particles" id="particles"></div>
+
+  <div class="login-wrap">
+    <!-- Left Branding Panel -->
+    <div class="login-left">
+      <div class="left-brand">
+        <div class="logo-badge">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 8L15 22V52C15 72 30 89 50 95C70 89 85 72 85 52V22L50 8Z" fill="#166534" stroke="#F59E0B"
+              stroke-width="3" />
+            <path d="M50 14L21 26V50C21 67 33 82 50 88C67 82 79 67 79 50V26L50 14Z" fill="#123524" />
+            <path d="M30 65C40 60 48 61 50 63C52 61 60 60 70 65C62 55 55 55 50 58C45 55 38 55 30 65Z" fill="#F59E0B" />
+            <circle cx="50" cy="38" r="9" fill="#F59E0B" />
+            <path d="M48 24H52V35H48V24Z" fill="#E2E8F0" />
+            <path d="M43 45L57 45L54 55L46 55Z" fill="#22C55E" />
+            <circle cx="34" cy="33" r="2.5" fill="#F59E0B" />
+            <circle cx="66" cy="33" r="2.5" fill="#F59E0B" />
+            <circle cx="50" cy="22" r="2.5" fill="#F59E0B" />
+          </svg>
+        </div>
+        <div class="brand-name">BINHS</div>
+        <div class="brand-full">Biñan Integrated National High School</div>
+      </div>
+
+      <div class="left-tagline">
+          <div class="tagline-title">Predictive Early Warning System</div>
+          <div class="tagline-desc">
+            Web-based academic standing monitoring with predictive analytics and automated parent SMS notification to
+            identify at-risk students early.
+          </div>
+        </div>
+
+      <div class="left-footer">
+        <p>&#169; 2026 BINHS Early Warning System<br>A Capstone Project &mdash; Grade 12 STEM A</p>
+      </div>
+    </div>
+
+    <!-- Right Login Form -->
+    <div class="login-right">
+      <div class="login-heading">
+        <h1>Welcome back &#128075;</h1>
+        <p>Sign in to access the BINHS Early Warning System dashboard.</p>
+      </div>
+
+      <div class="error-msg" id="errorMsg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+        <span id="errorText">Invalid username or password. Please try again.</span>
+      </div>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="form-input-wrap">
+            <span class="input-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </span>
+            <input type="text" id="username" name="username" placeholder="e.g. rarreza" autocomplete="username"
+              required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="form-input-wrap">
+            <span class="input-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+            <input type="password" id="password" name="password" placeholder="Enter your password"
+              autocomplete="current-password" required>
+            <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password visibility">
+              <svg id="eyeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-options">
+          <label class="form-check">
+            <input type="checkbox" id="rememberMe">
+            <span>Remember me</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-login" id="btnLogin">
+          <div class="spinner"></div>
+          <span class="btn-text">Sign In</span>
+        </button>
+      </form>
+
+      <div class="form-footer">
+        <p>Don't have an account?</p>
+        <button type="button" class="btn-create-account" id="btnCreateAccount">
+          Create Account
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Generate random particles
+    const particlesEl = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.cssText = `left:${Math.random() * 100}%;top:${Math.random() * 100}%;--dur:${3 + Math.random() * 4}s;--delay:${Math.random() * 5}s;width:${1 + Math.random() * 2}px;height:${1 + Math.random() * 2}px;`;
+      particlesEl.appendChild(p);
+    }
+    // Toggle password
+    const togglePw = document.getElementById('togglePw');
+    const pwInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    togglePw.addEventListener('click', () => {
+      const isText = pwInput.type === 'text';
+      pwInput.type = isText ? 'password' : 'text';
+      eyeIcon.innerHTML = isText
+        ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+        : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    });
+    const loginForm = document.getElementById('loginForm');
+    const btnLogin = document.getElementById('btnLogin');
+    const errorMsg = document.getElementById('errorMsg');
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim().toLowerCase();
+      const password = document.getElementById('password').value;
+      btnLogin.classList.add('loading');
+      errorMsg.classList.remove('show');
+
+      // Attempt live authentication via Node.js + MySQL backend
+      const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+      try {
+        const response = await fetch(`${apiBase}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        btnLogin.classList.remove('loading');
+
+        if (data.success && data.user) {
+          sessionStorage.setItem('binhs_user', JSON.stringify({
+            username: data.user.username,
+            role: data.user.role,
+            name: data.user.name,
+            userId: data.user.userId,
+            sections: Array.isArray(data.user.sections) ? data.user.sections : [],
+            token: data.token
+          }));
+          window.location.href = data.user.role === 'Admin' ? 'admin-dashboard.html' : 'dashboard.html';
+          return;
+        }
+      } catch (networkErr) {
+        btnLogin.classList.remove('loading');
+      }
+
+      errorMsg.classList.add('show');
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
+    });
+    
+    // Create Account button handler
+    const btnCreateAccount = document.getElementById('btnCreateAccount');
+    if (btnCreateAccount) {
+      btnCreateAccount.addEventListener('click', () => {
+        window.location.href = 'register.html';
+      });
+    }
+  </script>
+</body>
+
+</html>
+

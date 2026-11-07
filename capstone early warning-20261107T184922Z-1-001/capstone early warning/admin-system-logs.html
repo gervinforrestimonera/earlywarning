@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | System Logs - Early Warning System</title>
+  <meta name="description" content="Audit trail of system activities, account actions, and security events for the BINHS Early Warning System administrator panel.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ===== System Logs (Admin) page-specific styles (green theme preserved) ===== */
+    .um-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 14px; padding: 18px 20px 14px;
+    }
+    .um-card-filters {
+      display: flex; align-items: flex-end; flex-wrap: wrap;
+      gap: 12px; padding: 0 20px 16px;
+    }
+    .um-filter { display: grid; gap: 5px; }
+    .um-filter label { font-size: 11px; font-weight: 700; letter-spacing: 0.2px; color: var(--text-muted); }
+    .um-filter .styled-select { min-width: 150px; }
+    .um-search { flex: 1; min-width: 240px; }
+    .um-card .table-responsive { border-top: 1px solid var(--border-light); }
+
+    #logsTable th:first-child,
+    #logsTable td:first-child { width: 42px; text-align: center; }
+    #logsTable .row-index { color: var(--text-light); font-weight: 700; font-size: 12px; }
+    #logsTable .log-time { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+    #logsTable .log-ip { color: var(--text-muted); font-size: 12px; font-family: var(--font-mono); white-space: nowrap; }
+    #logsTable .btn-table-action { display: inline-flex; align-items: center; gap: 5px; }
+    #logsTable .btn-table-action svg { width: 13px; height: 13px; }
+
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .page-btn:disabled:hover { background: #FFFFFF; color: var(--text-secondary); }
+    .page-btn svg { width: 14px; height: 14px; }
+
+    /* Log detail modal */
+    .log-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .log-detail-item {
+      background: #F8FAFC; border: 1px solid var(--border-light);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .log-detail-item small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; }
+    .log-detail-item strong { font-size: 13px; color: var(--text-main); word-break: break-word; }
+    .log-detail-full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+  <!-- Auth Guard: admin-only page -->
+  <script>
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+    else if (_user.role !== 'Admin') window.location.href = 'dashboard.html';
+  </script>
+
+  <div class="app-layout">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar"></aside>
+    <script src="js/admin-sidebar.js"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div>
+            <h1 class="page-title">System Logs</h1>
+            <p class="page-subtitle"><a href="admin-dashboard.html">Dashboard</a> &rsaquo; System Logs</p>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <!-- Notifications -->
+          <div class="notification-wrapper">
+            <button class="icon-btn" id="btnNotifications" title="System Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="badge-count" id="notificationBadge">2</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="dropdown-header">
+                <strong>System Notifications</strong>
+                <span class="badge-pill danger">2 New</span>
+              </div>
+              <div class="dropdown-list">
+                <div class="dropdown-item">
+                  <div class="dot warning"></div>
+                  <div>
+                    <div class="item-title">Multiple failed login attempts</div>
+                    <div class="item-desc">Unrecognized device flagged by security log</div>
+                    <span class="item-time">8 mins ago</span>
+                  </div>
+                </div>
+                 <div class="dropdown-item">
+                   <div>
+                     <div class="item-title">No notifications yet</div>
+                     <div class="item-desc">New system alerts will appear here.</div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="user-menu-wrapper">
+            <button class="top-user-pill" id="btnTopUserMenu" type="button">
+              <div class="top-user-avatar-wrapper">
+                <div class="top-user-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <span class="top-user-status-dot"></span>
+              </div>
+              <div class="top-user-details">
+                <span class="top-user-name" id="topUserName">Gervin Forres N. Timonera</span>
+                <span class="top-user-role" id="topUserRole">System Administrator</span>
+              </div>
+              <svg class="top-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="user-dropdown-menu" id="userProfileDropdown">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <div class="user-dropdown-info">
+                  <strong class="user-dropdown-name" id="dropdownUserName">Gervin Forres N. Timonera</strong>
+                  <span class="user-dropdown-role" id="dropdownUserRole">System Administrator</span>
+                </div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <div class="user-dropdown-actions">
+                <button class="user-dropdown-item logout-item" id="topBtnLogout" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-container">
+        <!-- ========== SUMMARY METRICS ========== -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <div class="metric-label">TOTAL LOG ENTRIES</div>
+            </div>
+            <div class="metric-value" id="slStatTotal">0</div>
+            <div class="metric-footnote">All recorded system events</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="metric-label">EVENTS TODAY</div>
+            </div>
+            <div class="metric-value" id="slStatToday">0</div>
+            <div class="metric-footnote">Logged within the last 24 hours</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              </div>
+              <div class="metric-label">AUTHENTICATION EVENTS</div>
+            </div>
+            <div class="metric-value" id="slStatAuth">0</div>
+            <div class="metric-footnote">Logins &amp; access attempts</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div class="metric-label">ALERTS &amp; WARNINGS</div>
+            </div>
+            <div class="metric-value" id="slStatAlerts">0</div>
+            <div class="metric-footnote">Critical &amp; warning severity</div>
+          </div>
+        </div>
+        <!-- ========== SYSTEM LOGS CARD ========== -->
+        <div class="table-card um-card">
+          <div class="um-card-head">
+            <div>
+              <h2 class="panel-title">Audit Trail</h2>
+              <p class="panel-desc">Complete record of account actions, security events, and automated system activities.</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-secondary" id="btnExportLogs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export CSV</span>
+              </button>
+              <button class="btn btn-danger" id="btnClearLogs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Clear Logs</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="um-card-filters">
+            <div class="search-box um-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="logSearchInput" placeholder="Search by user, action, or IP address...">
+            </div>
+            <div class="um-filter">
+              <label for="logCategoryFilter">Category</label>
+              <select id="logCategoryFilter" class="styled-select">
+                <option value="all">All Categories</option>
+                <option value="Authentication">Authentication</option>
+                <option value="User Management">User Management</option>
+                <option value="Student Records">Student Records</option>
+                <option value="SMS Gateway">SMS Gateway</option>
+                <option value="System">System</option>
+              </select>
+            </div>
+            <div class="um-filter">
+              <label for="logSeverityFilter">Severity</label>
+              <select id="logSeverityFilter" class="styled-select">
+                <option value="all">All Severities</option>
+                <option value="info">Info</option>
+                <option value="success">Success</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="logsTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Category</th>
+                  <th>Severity</th>
+                  <th>IP Address</th>
+                  <th>Date &amp; Time</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-footer-pagination" id="logsPagination">
+            <span id="logsCount">Showing 0 log entries</span>
+            <div class="pagination-buttons" id="logsPaginationBtns"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- LOG DETAIL MODAL -->
+  <div class="modal-overlay" id="logDetailModal">
+    <div class="modal-dialog modal-md">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Log Entry Details</h3>
+          <span class="modal-subtitle">Full audit record for this event</span>
+        </div>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="log-detail-grid">
+          <div class="log-detail-item"><small>Log ID</small><strong id="ldLogId">&mdash;</strong></div>
+          <div class="log-detail-item"><small>Severity</small><strong id="ldSeverity">&mdash;</strong></div>
+          <div class="log-detail-item"><small>User</small><strong id="ldUser">&mdash;</strong></div>
+          <div class="log-detail-item"><small>Role</small><strong id="ldRole">&mdash;</strong></div>
+          <div class="log-detail-item"><small>Category</small><strong id="ldCategory">&mdash;</strong></div>
+          <div class="log-detail-item"><small>IP Address</small><strong id="ldIp">&mdash;</strong></div>
+          <div class="log-detail-item"><small>Date &amp; Time</small><strong id="ldTime">&mdash;</strong></div>
+          <div class="log-detail-item log-detail-full"><small>Action / Description</small><strong id="ldAction">&mdash;</strong></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/data-secure.js"></script>
+  <script>
+    // ===== AUTH & USER =====
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null') || { name: 'Gervin Forres N. Timonera', role: 'Admin' };
+    const roleTitle = currentUser.role === 'Admin' ? 'System Administrator' : 'Teacher / Advisor';
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    ['sidebarUserName', 'topUserName', 'dropdownUserName'].forEach(id => setText(id, currentUser.name));
+    ['sidebarUserRole', 'topUserRole', 'dropdownUserRole'].forEach(id => setText(id, roleTitle));
+    const assignedSections = Array.isArray(currentUser.sections) ? currentUser.sections.filter(Boolean) : [];
+    setText('sidebarUserSection', currentUser.role === 'Admin' ? 'All SHS Sections' : (assignedSections.length ? `${assignedSections.join(', ')} Adviser` : 'No section assigned'));
+
+    // ===== HELPERS =====
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>'\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+
+    // ===== SIDEBAR / DROPDOWN / LOGOUT =====
+    document.getElementById('mobileMenuBtn').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+    const userBtn = document.getElementById('btnTopUserMenu');
+    const userDropdown = document.getElementById('userProfileDropdown');
+    userBtn.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle('active'); };
+    document.addEventListener('click', () => userDropdown.classList.remove('active'));
+    function doLogout() { sessionStorage.removeItem('binhs_user'); window.location.href = 'index.html'; }
+    document.getElementById('btnLogout').onclick = doLogout;
+    document.getElementById('topBtnLogout').onclick = doLogout;
+
+    // ===== NOTIFICATIONS DROPDOWN =====
+    const notifBtn = document.getElementById('btnNotifications');
+    const notifDropdown = document.getElementById('notificationDropdown');
+    if (notifBtn && notifDropdown) {
+      notifBtn.onclick = (e) => { e.stopPropagation(); notifDropdown.classList.toggle('active'); };
+      document.addEventListener('click', (e) => { if (!notifDropdown.contains(e.target)) notifDropdown.classList.remove('active'); });
+    }
+
+    // ===== MODALS =====
+    function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+    function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+    document.querySelectorAll('[data-close-modal]').forEach(btn => btn.onclick = () => btn.closest('.modal-overlay')?.classList.remove('active'));
+    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
+
+    // ===== TOAST =====
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `<span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    // ===== DATE FORMAT =====
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
+             date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    // ===== SYSTEM LOG DATA (database-backed) =====
+    const state = { search: '', category: 'all', severity: 'all', page: 1, pageSize: 10 };
+    let currentLogs = [];
+    let pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
+    let stats = { total: 0, today: 0, auth: 0, alerts: 0 };
+
+    async function apiFetch(path, options = {}) {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      const res = await fetch(API_BASE_URL + path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.token ? { Authorization: 'Bearer ' + session.token } : {}),
+          ...(options.headers || {})
+        }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.message || ('Request failed (' + res.status + ')'));
+      }
+      return data;
+    }
+
+    // ===== SEVERITY MAPPING =====
+    const SEVERITY = {
+      info:     { label: 'Info',     badge: 'info',    avatar: 'blue-bg' },
+      success:  { label: 'Success',  badge: 'success', avatar: 'green-bg' },
+      warning:  { label: 'Warning',  badge: 'warning', avatar: 'amber-bg' },
+      critical: { label: 'Critical', badge: 'danger',  avatar: 'red-bg' }
+    };
+    const sev = (s) => SEVERITY[s] || SEVERITY.info;
+
+    async function loadLogs() {
+      try {
+        const params = new URLSearchParams();
+        params.set('page', String(state.page));
+        params.set('pageSize', String(state.pageSize));
+        params.set('category', state.category);
+        params.set('severity', state.severity);
+        if (state.search.trim()) params.set('search', state.search.trim());
+        const data = await apiFetch('/api/system/logs?' + params.toString());
+        currentLogs = Array.isArray(data.logs) ? data.logs : [];
+        pagination = {
+          page: data.page || state.page,
+          pageSize: data.pageSize || state.pageSize,
+          total: (data.total != null) ? data.total : (data.count || 0),
+          totalPages: data.totalPages || 1
+        };
+        state.page = pagination.page;
+        if (data.stats) stats = data.stats;
+        renderStats();
+        renderLogs();
+      } catch (err) {
+        showToast(err.message || 'Failed to load system logs.', 'danger');
+        const tbody = document.getElementById('logsTableBody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:26px;color:#64748B;">Failed to load log entries.</td></tr>';
+      }
+    }
+
+    // ===== FILTER =====
+    function filteredLogs() {
+      return currentLogs.slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+
+    // ===== STATS =====
+    function renderStats() {
+      setText('slStatTotal', stats.total || 0);
+      setText('slStatToday', stats.today || 0);
+      setText('slStatAuth', stats.auth || 0);
+      setText('slStatAlerts', stats.alerts || 0);
+    }
+
+    // ===== RENDER TABLE =====
+    function renderLogs() {
+      const rows = filteredLogs();
+      const total = pagination.total || 0;
+      const totalPages = pagination.totalPages || 1;
+      const startIdx = (pagination.page - 1) * pagination.pageSize;
+
+      const tbody = document.getElementById('logsTableBody');
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:26px;color:#64748B;">No log entries match the current filters.</td></tr>';
+      } else {
+        tbody.innerHTML = rows.map((l, i) => {
+          const s = sev(l.severity);
+          const ts = l.timestamp ? new Date(l.timestamp) : new Date();
+          return '<tr>' +
+            '<td class="row-index">' + (startIdx + i + 1) + '</td>' +
+            '<td><div class="student-cell"><div class="table-avatar" style="' + (l.severity === 'critical' ? 'background:#DC2626;' : l.severity === 'warning' ? 'background:#D97706;' : '') + '">' + esc(String(l.user || '').charAt(0)) + '</div><div><div class="student-name-text">' + esc(l.user) + '</div><small style="color:#64748B;">' + esc(l.role) + '</small></div></div></td>' +
+            '<td style="color:var(--text-secondary); font-size:12.5px;">' + esc(l.action) + '</td>' +
+            '<td><span class="badge-pill info">' + esc(l.category) + '</span></td>' +
+            '<td><span class="badge-pill ' + s.badge + '">' + s.label + '</span></td>' +
+            '<td class="log-ip">' + esc(l.ip) + '</td>' +
+            '<td class="log-time">' + formatDate(ts) + '</td>' +
+            '<td class="text-right" style="white-space:nowrap;"><button class="btn-table-action btn-view-log" data-id="' + l.logId + '" title="View details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</button></td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      setText('logsCount', total === 0 ? 'No log entries found' : 'Showing ' + (startIdx + 1) + ' to ' + Math.min(startIdx + pagination.pageSize, total) + ' of ' + total + ' entries');
+      renderPagination(pagination.totalPages, total);
+      tbody.querySelectorAll('.btn-view-log').forEach(btn => btn.onclick = () => openLogDetail(Number(btn.dataset.id)));
+    }
+
+    function renderPagination(totalPages, total) {
+      const container = document.getElementById('logsPaginationBtns');
+      container.innerHTML = '';
+      if (total === 0) return;
+      const mkNavBtn = (html, page, disabled) => {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.innerHTML = html;
+        btn.disabled = disabled;
+        if (!disabled) btn.onclick = () => { state.page = page; loadLogs(); };
+        container.appendChild(btn);
+      };
+      mkNavBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>', state.page - 1, state.page <= 1);
+      for (let p = 1; p <= totalPages; p++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (p === state.page ? ' active' : '');
+        btn.textContent = p;
+        btn.onclick = () => { state.page = p; loadLogs(); };
+        container.appendChild(btn);
+      }
+      mkNavBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>', state.page + 1, state.page >= totalPages);
+    }
+
+    function renderAll() { loadLogs(); }
+
+    // ===== FILTER BINDINGS =====
+    document.getElementById('logSearchInput').oninput = (e) => { state.search = e.target.value; state.page = 1; loadLogs(); };
+    document.getElementById('logCategoryFilter').onchange = (e) => { state.category = e.target.value; state.page = 1; loadLogs(); };
+    document.getElementById('logSeverityFilter').onchange = (e) => { state.severity = e.target.value; state.page = 1; loadLogs(); };
+
+    // ===== LOG DETAIL MODAL =====
+    function openLogDetail(logId) {
+      const l = currentLogs.find(x => x.logId === logId);
+      if (!l) return;
+      const s = sev(l.severity);
+      setText('ldLogId', '#' + l.logId);
+      setText('ldSeverity', s.label);
+      setText('ldUser', l.user);
+      setText('ldRole', l.role);
+      setText('ldCategory', l.category);
+      setText('ldIp', l.ip);
+      setText('ldTime', formatDate(new Date(l.timestamp)));
+      setText('ldAction', l.action);
+      openModal('logDetailModal');
+    }
+
+    // ===== EXPORT CSV =====
+    document.getElementById('btnExportLogs').onclick = async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set('page', '1');
+        params.set('pageSize', '1000');
+        params.set('category', state.category);
+        params.set('severity', state.severity);
+        if (state.search.trim()) params.set('search', state.search.trim());
+        const data = await apiFetch('/api/system/logs?' + params.toString());
+        const rows = Array.isArray(data.logs) ? data.logs : [];
+        if (!rows.length) { showToast('No log entries to export.', 'warning'); return; }
+        const header = 'Log ID,User,Role,Action,Category,Severity,IP Address,Date & Time';
+        const csv = [header].concat(rows.map(l => [
+          l.logId,
+          '"' + String(l.user).replace(/"/g, '""') + '"',
+          l.role,
+          '"' + String(l.action).replace(/"/g, '""') + '"',
+          l.category,
+          l.severity,
+          l.ip,
+          '"' + formatDate(new Date(l.timestamp)) + '"'
+        ].join(','))).join('\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        a.download = 'binhs_system_logs.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        showToast(rows.length + ' log entries exported.', 'success');
+      } catch (err) {
+        showToast(err.message || 'Export failed.', 'danger');
+      }
+    };
+
+    // ===== CLEAR LOGS =====
+    document.getElementById('btnClearLogs').onclick = async () => {
+      if (!stats.total) { showToast('There are no log entries to clear.', 'warning'); return; }
+      if (!confirm('Clear all system log entries? This audit trail action cannot be undone.')) return;
+      try {
+        await apiFetch('/api/system/logs', { method: 'DELETE' });
+        showToast('System logs cleared.', 'warning');
+        state.page = 1;
+        await loadLogs();
+      } catch (err) {
+        showToast(err.message || 'Failed to clear logs.', 'danger');
+      }
+    };
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+      renderAll();
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+

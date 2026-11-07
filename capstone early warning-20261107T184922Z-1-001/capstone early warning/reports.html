@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | Reports</title>
+  <meta name="description" content="View and generate comprehensive academic reports, attendance summaries, and predictive at-risk evaluations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/reports.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/data-secure.js"></script>
+  <script src="js/grade-calc.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/notifications.js"></script>
+</head>
+<body>
+  <!-- Auth Guard -->
+  <script>
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+  </script>
+
+  <div class="app-layout">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar"></aside>
+    <script src="js/admin-sidebar.js"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-wrapper">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div>
+            <h1 class="page-title">Reports</h1>
+            <p class="page-subtitle">View and generate reports to monitor student performance, attendance, and at-risk status.</p>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <!-- Notifications -->
+          <div class="notification-wrapper">
+            <button class="icon-btn" id="btnNotifications" title="System Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="badge-count" id="notificationBadge" hidden>0</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="dropdown-header">
+                <strong>Alerts & Early Warnings</strong>
+                <span class="badge-pill" id="notifBadgePill">0</span>
+              </div>
+              <div class="dropdown-list" id="notifDropdownList">
+              </div>
+            </div>
+          </div>
+
+          <!-- User Menu -->
+          <div class="user-menu-wrapper">
+            <button class="top-user-pill" id="btnTopUserMenu" type="button" aria-expanded="false" aria-label="User profile menu">
+              <div class="top-user-avatar-wrapper">
+                <div class="top-user-avatar" id="topUserAvatar">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <span class="top-user-status-dot" title="Online"></span>
+              </div>
+              <div class="top-user-details">
+                <span class="top-user-name" id="topUserName">Roldan R. Arreza</span>
+                <span class="top-user-role" id="topUserRole">Teacher / Advisor</span>
+              </div>
+              <svg class="top-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="user-dropdown-menu" id="userProfileDropdown">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-avatar">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <div class="user-dropdown-info">
+                  <strong class="user-dropdown-name" id="dropdownUserName">Roldan R. Arreza</strong>
+                  <span class="user-dropdown-role" id="dropdownUserRole">Teacher / Advisor</span>
+                  <span class="user-dropdown-badge" id="dropdownUserSection">Grade 12 - STEM A Adviser</span>
+                </div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <div class="user-dropdown-actions">
+                <button class="user-dropdown-item logout-item" id="topBtnLogout" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Printable Official Header -->
+      <div class="print-official-header">
+        <h2 style="font-size: 16px; margin: 0; text-transform: uppercase;">Republic of the Philippines • Department of Education</h2>
+        <h3 style="font-size: 14px; margin: 2px 0;">Region IV-A CALABARZON • Division of Biñan City</h3>
+        <h1 style="font-size: 20px; font-weight: 800; margin: 6px 0; color: #166534;">BIÑAN INTEGRATED NATIONAL HIGH SCHOOL</h1>
+        <p style="font-size: 12px; margin: 0; font-weight: 600;">EARLY WARNING SYSTEM • ACADEMIC STANDING & PERFORMANCE REPORT</p>
+        <p style="font-size: 11px; margin-top: 4px; color: #555;">School Year: <span id="printSchoolYear">2026 - 2027</span> • Section: <span id="printSectionName">Grade 12 - STEM A</span> • Date Generated: <span id="printDateGenerated">May 20, 2026</span></p>
+      </div>
+
+      <!-- ==================== PAGE CONTENT ==================== -->
+      <div class="reports-page-container">
+
+        <!-- 1. FILTER BAR -->
+        <section class="reports-filter-bar" aria-label="Report Filters">
+          <form class="reports-filter-form" id="reportsFilterForm" onsubmit="event.preventDefault(); generateFilteredReport();">
+            <div class="filter-group">
+              <label for="filterSchoolYear">School Year</label>
+              <select id="filterSchoolYear" class="filter-select">
+                <option value="">Loading school year...</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filterGradeLevel">Grade Level</label>
+              <select id="filterGradeLevel" class="filter-select">
+                <option value="" selected disabled>Loading grade levels...</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filterSection">Section</label>
+              <select id="filterSection" class="filter-select">
+                <option value="all" selected>All Sections</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Report Date</label>
+              <div class="date-range-box">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <input type="date" id="reportDate" value="" aria-label="Report date">
+              </div>
+            </div>
+            <div class="filter-group filter-action">
+              <label style="visibility:hidden;">Action</label>
+              <button type="submit" class="btn-generate-report" id="btnGenerateReport">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <span>Generate Report</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- 2. KPI CARDS -->
+        <section class="reports-kpi-grid" aria-label="Summary Statistics">
+          <!-- Card 1: Total Students -->
+          <article class="reports-kpi-card">
+            <div class="kpi-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+              </svg>
+            </div>
+            <div class="kpi-content">
+              <div class="kpi-label">Total Students</div>
+              <div class="kpi-value" id="kpiTotalStudents">--</div>
+            </div>
+          </article>
+          <!-- Card 2: Passing Students -->
+          <article class="reports-kpi-card">
+            <div class="kpi-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+              </svg>
+            </div>
+            <div class="kpi-content">
+              <div class="kpi-label">Passing Students</div>
+              <div class="kpi-value" id="kpiPassingStudents">--</div>
+            </div>
+          </article>
+          <!-- Card 3: At-Risk Students -->
+          <article class="reports-kpi-card">
+            <div class="kpi-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/>
+              </svg>
+            </div>
+            <div class="kpi-content">
+              <div class="kpi-label">At-Risk Students</div>
+              <div class="kpi-value kpi-value-red" id="kpiAtRiskStudents">--</div>
+            </div>
+          </article>
+          <!-- Card 4: Students with Absences -->
+          <article class="reports-kpi-card">
+            <div class="kpi-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="kpi-content">
+              <div class="kpi-label">Students with Absences</div>
+              <div class="kpi-value" id="kpiAbsenceStudents">--</div>
+            </div>
+          </article>
+          <!-- Card 5: Average Grade -->
+          <article class="reports-kpi-card">
+            <div class="kpi-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
+              </svg>
+            </div>
+            <div class="kpi-content">
+              <div class="kpi-label">Average Grade</div>
+              <div class="kpi-value" id="kpiAverageGrade">--</div>
+            </div>
+          </article>
+          <!-- Card 6: Insufficient Data -->
+          <article class="reports-kpi-card">
+            <div class="kpi-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M1 21h22L12 2z"/>
+              </svg>
+            </div>
+            <div class="kpi-content">
+              <div class="kpi-label">Insufficient Data</div>
+              <div class="kpi-value kpi-value-muted" id="kpiInsufficientData">--</div>
+            </div>
+          </article>
+        </section>
+
+        <!-- 3. CHARTS ROW -->
+        <section class="reports-charts-row" aria-label="Visual Analytics">
+          <!-- Chart 1 -->
+          <article class="reports-chart-card">
+            <div class="chart-card-header">
+              <h3>Academic Performance Overview</h3>
+              <p>Term class average</p>
+            </div>
+            <div class="chart-container-bar">
+              <canvas id="chartSubjectPerformance"></canvas>
+            </div>
+          </article>
+          <!-- Chart 2 -->
+          <article class="reports-chart-card">
+            <div class="chart-card-header">
+              <h3>Student Status</h3>
+              <p>Risk classification</p>
+            </div>
+            <div class="donut-layout">
+              <div class="donut-chart-box">
+                <canvas id="chartStudentStatus"></canvas>
+                <div class="donut-center-badge">
+                  <span class="donut-center-number">42</span>
+                  <span class="donut-center-label">Students</span>
+                </div>
+              </div>
+              <div class="donut-legend-list">
+                <div class="donut-legend-item">
+                  <div class="legend-label-wrap">
+                    <span class="legend-dot green"></span>
+                    <span>Passing</span>
+                  </div>
+                  <div>
+                    <span class="legend-value">35</span>
+                    <span class="legend-pct">(83.3%)</span>
+                  </div>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="legend-label-wrap">
+                    <span class="legend-dot red"></span>
+                    <span>At-Risk</span>
+                  </div>
+                  <div>
+                    <span class="legend-value">5</span>
+                    <span class="legend-pct">(11.9%)</span>
+                  </div>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="legend-label-wrap">
+                    <span class="legend-dot gray"></span>
+                    <span>Failed</span>
+                  </div>
+                  <div>
+                    <span class="legend-value">2</span>
+                    <span class="legend-pct">(4.8%)</span>
+                  </div>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="legend-label-wrap">
+                    <span class="legend-dot muted"></span>
+                    <span>Insufficient Data</span>
+                  </div>
+                  <div>
+                    <span class="legend-value">0</span>
+                    <span class="legend-pct">(0%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+          <!-- Chart 3 -->
+          <article class="reports-chart-card">
+            <div class="chart-card-header">
+              <h3>Grade Distribution</h3>
+              <p>Students per grade bracket</p>
+            </div>
+            <div class="chart-container-line">
+              <canvas id="chartAttendanceRate"></canvas>
+            </div>
+          </article>
+        </section>
+
+        <!-- 4. BOTTOM GRID -->
+        <section class="reports-bottom-grid" aria-label="Student Table and Actions">
+          <!-- Left: At-Risk Students Table -->
+          <article class="reports-table-card">
+            <div class="table-card-header">
+              <div>
+                <h3>At-Risk Students</h3>
+                <p>Students meeting risk criteria (Grade < 75% or 3+ unexcused absences).</p>
+              </div>
+              <a href="early-warning.html" class="btn-view-all-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12 s 4 -8 11 -8 11 8 11 8 -4 8 -11 8 -11 -8 -11 -8 z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>View All</span>
+              </a>
+            </div>
+            <div class="reports-table-responsive">
+              <table class="reports-table" id="atRiskStudentsTable">
+                <thead>
+                  <tr>
+                    <th style="width: 36px;">#</th>
+                    <th>Student Name</th>
+                    <th>LRN</th>
+                    <th>Grade Average</th>
+                    <th>Absences <br><small style="text-transform:none; font-weight:500; color:#64748B;">(Unexcused)</small></th>
+                    <th>Risk Level</th>
+                    <th style="text-align: center; width: 60px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="atRiskTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="reports-table-footer">
+              <span class="table-footer-info" id="atRiskFooterInfo">Showing 0 students</span>
+              <div class="table-pagination" id="atRiskPaginationBtns">
+                <button class="pagination-btn" disabled aria-label="Previous page">&lt;</button>
+                <button class="pagination-btn active">1</button>
+                <button class="pagination-btn" disabled aria-label="Next page">&gt;</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Right: Side Stack -->
+          <div class="reports-side-stack">
+            <!-- Card 1: Report Options -->
+            <article class="report-options-card">
+              <div class="side-card-header">
+                <h3>Report Options</h3>
+                <p>Download or generate detailed reports.</p>
+              </div>
+              <div class="report-options-list">
+                <!-- Option 1 -->
+                <div class="report-option-item" onclick="openReportModal('performance')">
+                  <div class="report-option-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                    </svg>
+                  </div>
+                  <div class="report-option-text">
+                    <div class="report-option-title">Student Performance Report</div>
+                    <div class="report-option-desc">Grades, averages, and subject performance</div>
+                  </div>
+                  <svg class="report-option-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+                <!-- Option 2 -->
+                <div class="report-option-item" onclick="openReportModal('attendance')">
+                  <div class="report-option-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                  </div>
+                  <div class="report-option-text">
+                    <div class="report-option-title">Attendance Report</div>
+                    <div class="report-option-desc">Attendance summary and absences</div>
+                  </div>
+                  <svg class="report-option-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+                <!-- Option 3 -->
+                <div class="report-option-item" onclick="openReportModal('atrisk')">
+                  <div class="report-option-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/>
+                    </svg>
+                  </div>
+                  <div class="report-option-text">
+                    <div class="report-option-title">At-Risk Students Report</div>
+                    <div class="report-option-desc">List of students meeting risk criteria</div>
+                  </div>
+                  <svg class="report-option-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+                <!-- Option 4 (Admin Only) -->
+                <div class="report-option-item admin-only-option" id="optParentNotifications" style="display:none;" onclick="openReportModal('notifications')">
+                  <div class="report-option-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="report-option-text">
+                    <div class="report-option-title">Parent Notification Log</div>
+                    <div class="report-option-desc">SMS notifications sent to parents</div>
+                  </div>
+                  <svg class="report-option-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+                <!-- Option 5 (Admin Only) -->
+                <div class="report-option-item admin-only-option" id="optCrossSection" style="display:none;" onclick="openReportModal('cross')">
+                  <div class="report-option-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                  </div>
+                  <div class="report-option-text">
+                    <div class="report-option-title">Cross-Section Comparison</div>
+                    <div class="report-option-desc">Compare performance across all sections</div>
+                  </div>
+                  <svg class="report-option-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              </div>
+            </article>
+
+            <!-- Card 2: Export Data -->
+            <article class="export-data-card">
+              <div class="side-card-header">
+                <h3>Export Data</h3>
+                <p>Download data in different formats.</p>
+              </div>
+              <div class="export-buttons-grid">
+                <button type="button" class="btn-export-tile excel" onclick="exportToExcel()" title="Download CSV formatted for Microsoft Excel">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="8" y1="13" x2="16" y2="17"/>
+                    <line x1="16" y1="13" x2="8" y2="17"/>
+                  </svg>
+                  <span>Export to Excel</span>
+                </button>
+                <button type="button" class="btn-export-tile pdf" onclick="exportToPDF()" title="Generate Printable PDF Document">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <path d="M9 15h6"/>
+                    <path d="M9 11h6"/>
+                  </svg>
+                  <span>Export to PDF</span>
+                </button>
+                <button type="button" class="btn-export-tile print" onclick="window.print()" title="Print formal report directly">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                  </svg>
+                  <span>Print Report</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+  <!-- 1. Student Detail Quick Modal -->
+  <div class="reports-modal-backdrop" id="studentDetailModal">
+    <div class="reports-modal-content">
+      <div class="modal-header-bar">
+        <h3>Student Risk Profile</h3>
+        <button class="modal-close-btn" onclick="closeStudentModal()" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body-content" id="studentModalBody">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Detailed Report Document Modal -->
+  <div class="reports-modal-backdrop" id="reportPreviewModal">
+    <div class="reports-modal-content" style="max-width: 760px;">
+      <div class="modal-header-bar">
+        <h3 id="reportModalTitle">Official Generated Report</h3>
+        <button class="modal-close-btn" onclick="closeReportModal()" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body-content" id="reportModalBody">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Alert -->
+  <div class="reports-toast" id="reportsToast">
+    <div class="toast-icon-circle">&#10003;</div>
+    <span id="toastMessage">Report generated successfully!</span>
+  </div>
+
+  <!-- ==================== PAGE SCRIPTS & CHARTS ==================== -->
+  <script>
+    // ==========================================
+    // 1. SESSION, ROLE & DATA SCOPE
+    // ==========================================
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    const isAdmin = !!(currentUser && currentUser.role === 'Admin');
+    // Multi-section support: teacher can be assigned to multiple sections (e.g. STEM A + STEM B)
+    let teacherSections = currentUser && Array.isArray(currentUser.sections) ? currentUser.sections.filter(Boolean) : [];
+    // Pagination state for the student report table
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+
+    // Map a short section filter value (e.g. "STEM A") to the full dataset section name.
+    const SECTION_MAP = {
+      'STEM Z': 'Grade 12 - STEM Z'
+    };
+
+    if (currentUser) {
+      const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setT('topUserName', currentUser.name);
+      setT('topUserRole', isAdmin ? 'System Administrator' : 'Teacher / Advisor');
+      setT('sidebarUserName', currentUser.name);
+      setT('sidebarUserRole', isAdmin ? 'System Administrator' : 'Teacher / Advisor');
+      setT('dropdownUserName', currentUser.name);
+      setT('dropdownUserRole', isAdmin ? 'System Administrator' : 'Teacher / Advisor');
+      setT('dropdownUserSection', isAdmin ? 'All SHS Sections' : (teacherSections.length ? teacherSections.join(', ') + ' Adviser' : 'No section assigned'));
+      if (isAdmin && document.getElementById('adminMenuSection')) {
+        document.getElementById('adminMenuSection').style.display = 'block';
+      }
+      // Reveal admin-only report options
+      if (isAdmin) {
+        ['optParentNotifications', 'optCrossSection'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'flex';
+        });
+      }
+    }
+
+    // Fetch authorized sections from backend API
+    async function fetchReportSections() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token || typeof fetch === 'undefined') return;
+      try {
+        const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+        const res = await fetch(`${apiBase}/api/students/sections`, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return;
+        const result = await res.json();
+        if (!result.success || !Array.isArray(result.sections)) return;
+        const sections = result.sections.map(r => r.section);
+        if (!isAdmin) {
+          teacherSections = sections;
+          currentUser.sections = sections;
+          sessionStorage.setItem('binhs_user', JSON.stringify(currentUser));
+        }
+      } catch (e) {
+        console.info('[Reports] Could not fetch sections:', e.message);
+      }
+    }
+    const secSelect = document.getElementById('filterSection');
+    if (secSelect) {
+      (async () => {
+        await fetchReportSections();
+        if (!isAdmin) {
+          const options = [new Option('All My Sections', 'all')];
+          teacherSections.forEach(section => options.push(new Option(section, section)));
+          secSelect.replaceChildren(...options);
+          if (teacherSections.length) secSelect.value = teacherSections[0];
+          secSelect.disabled = false;
+          secSelect.title = 'Your advisory sections';
+        } else {
+          try {
+            const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+            const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+            const res = await fetch(`${apiBase}/api/students/sections`, {
+              headers: { Authorization: `Bearer ${session.token}` }
+            });
+            if (res.ok) {
+              const result = await res.json();
+              if (result.success && Array.isArray(result.sections)) {
+                secSelect.innerHTML = `<option value="all" selected>All Sections (School-Wide)</option>`;
+                result.sections.forEach(r => {
+                  const opt = new Option(`${r.section} (${r.student_count})`, r.section);
+                  secSelect.appendChild(opt);
+                });
+              }
+            }
+          } catch (e) {
+            console.info('[Reports] Could not fetch admin sections:', e.message);
+          }
+          // Ensure the default option exists even if fetch failed
+          if (secSelect.children.length === 0) {
+            secSelect.innerHTML = `<option value="all" selected>All Sections (School-Wide)</option>`;
+          }
+          secSelect.disabled = false;
+        }
+      })();
+    }
+
+    // ==========================================
+     async function fetchReportSchoolYear() {
+       const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+       if (!session?.token || typeof fetch === 'undefined') return;
+       try {
+         const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+         const res = await fetch(`${apiBase}/api/settings`, { headers: { Authorization: `Bearer ${session.token}` } });
+         if (!res.ok) return;
+         const result = await res.json();
+         const sy = result.settings?.school_year || '2026 - 2027';
+         const sel = document.getElementById('filterSchoolYear');
+         if (sel) {
+           sel.innerHTML = `<option value="${sy}" selected>${sy}</option>`;
+         }
+         const printSy = document.getElementById('printSchoolYear');
+         if (printSy) printSy.textContent = sy;
+       } catch (e) {
+         console.info('[Reports] Could not fetch school year:', e.message);
+       }
+     }
+    // ==========================================
+    let currentGradeLevel = '';
+
+    async function fetchReportGradeLevels() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token || typeof fetch === 'undefined') return;
+      try {
+        const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+        const res = await fetch(`${apiBase}/api/students/grade-levels`, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return;
+        const result = await res.json();
+        if (!result.success || !Array.isArray(result.grade_levels)) return;
+
+        const gradeSelect = document.getElementById('filterGradeLevel');
+        if (!gradeSelect) return;
+
+        // Clear existing options (except placeholder)
+        gradeSelect.innerHTML = '<option value="" disabled selected>Select grade level</option>';
+
+        result.grade_levels.forEach(gl => {
+          const opt = new Option(gl, gl);
+          gradeSelect.add(opt);
+        });
+
+        gradeSelect.disabled = false;
+        gradeSelect.title = 'Grade levels from student records';
+
+        // Auto-select first grade level if only one exists
+        if (result.grade_levels.length === 1) {
+          gradeSelect.value = result.grade_levels[0];
+          currentGradeLevel = result.grade_levels[0];
+          await loadSectionsForGradeLevel(currentGradeLevel);
+        }
+      } catch (e) {
+        console.info('[Reports] Could not fetch grade levels:', e.message);
+      }
+    }
+
+    async function loadSectionsForGradeLevel(gradeLevel) {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token || typeof fetch === 'undefined') return;
+      currentGradeLevel = gradeLevel || '';
+
+      const secSelect = document.getElementById('filterSection');
+      if (!secSelect) return;
+
+      secSelect.innerHTML = '<option value="all" selected>All Sections</option>';
+      secSelect.disabled = true;
+
+      try {
+        const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+        const url = currentGradeLevel
+          ? `${apiBase}/api/students/sections?grade_level=${encodeURIComponent(currentGradeLevel)}`
+          : `${apiBase}/api/students/sections`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return;
+        const result = await res.json();
+        if (!result.success || !Array.isArray(result.sections)) return;
+
+        result.sections.forEach(r => {
+          const opt = new Option(`${r.section} (${r.student_count})`, r.section);
+          secSelect.add(opt);
+        });
+
+        secSelect.disabled = false;
+      } catch (e) {
+        console.info('[Reports] Could not load sections for grade level:', e.message);
+      }
+    }
+
+     // Initialize grade levels and sections on page load
+      (async () => {
+        await fetchReportSchoolYear();
+        await fetchReportGradeLevels();
+      })();
+
+    // Grade level change: reload sections for the selected grade level
+    const gradeSelect = document.getElementById('filterGradeLevel');
+    if (gradeSelect) {
+      gradeSelect.addEventListener('change', async (e) => {
+        await loadSectionsForGradeLevel(e.target.value);
+        // Reset section to 'all'
+        if (secSelect) {
+          secSelect.value = 'all';
+        }
+      });
+    }
+    const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>'\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+
+    // ===== ASSESSMENT LOADING & WEIGHTED GRADE (reports.html) =====
+    let AR_ASSESSMENTS = [];
+    let reportsDataAvailable = true;
+    let AR_ASSESSMENT_SCORES = {};
+    let assessmentsLoaded = false;
+
+     async function loadReportStudents() {
+       const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+       if (!session?.token || typeof fetch === 'undefined') {
+         reportsDataAvailable = false;
+         BINHS_DATA.students = [];
+         return false;
+       }
+       try {
+         const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+         const currentTerm = BINHS_DATA?.currentTerm || 1;
+         const res = await fetch(`${apiBase}/api/students?term=${encodeURIComponent('Term ' + currentTerm)}`, { headers: { Authorization: 'Bearer ' + session.token } });
+         if (!res.ok) {
+           reportsDataAvailable = false;
+           BINHS_DATA.students = [];
+           return false;
+         }
+         const result = await res.json();
+         if (result.success && Array.isArray(result.students)) {
+           BINHS_DATA.students = result.students;
+           reportsDataAvailable = true;
+           return true;
+         }
+         reportsDataAvailable = false;
+         BINHS_DATA.students = [];
+         return false;
+       } catch (e) {
+         console.info('[Reports] Could not load students:', e.message);
+         reportsDataAvailable = false;
+         BINHS_DATA.students = [];
+         return false;
+       }
+     }
+
+     async function loadAssessments() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token || typeof fetch === 'undefined') return;
+      try {
+         AR_ASSESSMENTS = [];
+         BINHS_DATA.assessmentScores = {};
+         const subject = Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0] ? BINHS_DATA.subjects[0] : 'General Mathematics';
+         const sectionFilterVal = secSelect ? secSelect.value : 'all';
+         const sectionParam = sectionFilterVal === 'all' ? '' : sectionFilterVal;
+         const res = await fetch(`${window.location.origin}/api/assessments?section=${encodeURIComponent(sectionParam)}&subject=${encodeURIComponent(subject)}`, {
+           headers: { Authorization: `Bearer ${session.token}` }
+         });
+         if (!res.ok) return;
+         const result = await res.json();
+         if (!result.success || !Array.isArray(result.assessments)) return;
+         AR_ASSESSMENTS = result.assessments.map(a => ({ ...a, quarter: (String(a.quarter || '').match(/(\d+)/) ? 'Term ' + String(a.quarter).match(/(\d+)/)[1] : a.quarter) }));
+         await Promise.all(result.assessments.map(async (a) => {
+          const sRes = await fetch(`${window.location.origin}/api/assessments/${a.id}/scores`, {
+            headers: { Authorization: `Bearer ${session.token}` }
+          });
+          if (sRes.ok) {
+            const sResult = await sRes.json();
+            if (sResult.success && Array.isArray(sResult.scores)) {
+              sResult.scores.forEach(row => {
+                AR_ASSESSMENT_SCORES[`${row.lrn}:${a.id}`] = Number(row.score);
+              });
+            }
+          }
+        }));
+        assessmentsLoaded = true;
+      } catch (e) {
+        console.info('[Reports] Could not load assessments:', e.message);
+      }
+    }
+
+    function ewAssessmentCategory(type) {
+      return GradeCalc.typeToComponent(type);
+    }
+    const EW_GRADE_WEIGHTS = GradeCalc.getSubjectWeights('General Mathematics');
+    function studentWeightedGrade(student, term) {
+      const termAssessments = AR_ASSESSMENTS.filter(a => (a.quarter === term));
+      if (!termAssessments.length) return null;
+      const subjectName = Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0] ? BINHS_DATA.subjects[0] : 'General Mathematics';
+      const scoreMap = {};
+      termAssessments.forEach(a => {
+        const key = `${student.lrn}:${a.id}`;
+        const val = AR_ASSESSMENT_SCORES[key];
+        if (val !== undefined && val !== null) scoreMap[a.id] = Number(val);
+      });
+      const result = GradeCalc.calculateQuarterlyGrade(termAssessments, term, subjectName, scoreMap);
+      return result.finalGrade;
+    }
+
+    function studentAvg(s) {
+      if (s.computedGrade !== null && s.computedGrade !== undefined && Number.isFinite(Number(s.computedGrade))) {
+        return Number(s.computedGrade);
+      }
+      const currentTerm = `Term ${BINHS_DATA?.currentTerm || 1}`;
+      return assessmentsLoaded && AR_ASSESSMENTS.some(a => a.quarter === currentTerm)
+        ? studentWeightedGrade(s, currentTerm)
+        : null;
+    }
+
+    function overallAvg(s) {
+      const quarters = [s.q1, s.q2, s.q3];
+      const valid = quarters.filter(q => q !== null && q !== undefined).map(q => Number(q)).filter(q => Number.isFinite(q));
+      if (valid.length === 0) return null;
+      return valid.reduce((sum, q) => sum + q, 0) / valid.length;
+    }
+
+    // Returns the students in scope for the current role + selected section + grade level filter.
+    function scopedStudents() {
+      const all = (BINHS_DATA && BINHS_DATA.students) ? BINHS_DATA.students : [];
+      const gradeLevel = currentGradeLevel || '';
+      const secVal = secSelect ? secSelect.value : 'all';
+
+      if (!isAdmin) {
+        if (secVal === 'all') {
+          return all.filter(s => teacherSections.includes(s.section) &&
+            (!gradeLevel || s.section.startsWith(gradeLevel + ' - ')));
+        }
+        const full = SECTION_MAP[secVal] || secVal;
+        return all.filter(s => s.section === full &&
+          (!gradeLevel || s.section.startsWith(gradeLevel + ' - ')));
+      }
+      if (secVal === 'all') {
+        return all.filter(s => !gradeLevel || s.section.startsWith(gradeLevel + ' - '));
+      }
+      const full = SECTION_MAP[secVal] || secVal;
+      return all.filter(s => s.section === full &&
+        (!gradeLevel || s.section.startsWith(gradeLevel + ' - ')));
+    }
+
+    function scopeLabel() {
+      if (!isAdmin) {
+        const sel = secSelect ? secSelect.value : 'all';
+        if (sel === 'all') return teacherSections.join(', ');
+        return teacherSections.includes(sel) ? sel : (SECTION_MAP[sel] || sel);
+      }
+      const sel = secSelect ? secSelect.value : 'all';
+      return sel === 'all' ? 'All Sections (School-Wide)' : (SECTION_MAP[sel] || sel);
+    }
+
+    // Compute all KPIs from a student list using the real decision-tree engine.
+    function computeMetrics(list) {
+      if (!reportsDataAvailable) {
+        return { total: 0, passing: 0, atRisk: 0, failed: 0, insufficient: 0, withAbsences: 0, averageGrade: null, gradeCount: 0, atRiskList: [] };
+      }
+      const total = list.length;
+      let passing = 0, atRisk = 0, failed = 0, insufficient = 0, withAbsences = 0;
+      let gradeSum = 0, gradeCount = 0;
+      const gradeBuckets = { '90-100': 0, '80-89': 0, '75-79': 0, 'Below 75': 0 };
+      const atRiskList = [];
+      list.forEach(s => {
+        const absences = s.absences || 0;
+        if (absences > 0) withAbsences++;
+
+        const hasTermAssessments = AR_ASSESSMENTS.some(a => a.quarter === ('Term ' + (BINHS_DATA?.currentTerm || 1)));
+        const backendLevel = hasTermAssessments ? s.riskLevel : null;
+        const isInsufficient = backendLevel === 'INSUFFICIENT_DATA' || backendLevel === 'INSUFFICIENT DATA';
+        const avg = isInsufficient ? null : studentAvg(s);
+
+        const evalStudent = { ...s, q1: avg, q2: avg, q3: avg, q4: avg, currentAverage: avg, averageGrade: avg };
+        const evalObj = backendLevel
+          ? { level: isInsufficient ? 'INSUFFICIENT_DATA' : (backendLevel === 'HIGH' || backendLevel === 'AT-RISK' ? 'HIGH' : (backendLevel === 'MODERATE' ? 'MODERATE' : 'LOW')), label: s.riskLabel || backendLevel, badgeClass: 'success', reasons: s.riskReasons || [] }
+          : ((typeof AnalyticsEngine !== 'undefined') ? AnalyticsEngine.evaluateStudent(evalStudent) : { level: 'LOW', label: 'NOT AT-RISK', badgeClass: 'success' });
+
+        // Students without valid grades: classify as INSUFFICIENT_DATA unless
+        // attendance independently triggers risk. Never count as Passing/Failed.
+        if (avg === null) {
+          const attendanceLevel = absences >= 3 ? 'HIGH' : (absences === 2 ? 'MODERATE' : 'INSUFFICIENT_DATA');
+          if (attendanceLevel === 'INSUFFICIENT_DATA') {
+            insufficient++;
+            return;
+          }
+          if (attendanceLevel === 'HIGH') {
+            atRisk++;
+            atRiskList.push(Object.assign({ _eval: { level: 'HIGH', label: 'AT-RISK', badgeClass: 'danger', reasons: ['Attendance Criterion: Accumulated ' + absences + ' unexcused absences'] } }, s));
+          }
+          return;
+        }
+
+        // Student has a valid grade — include in grade statistics
+        gradeSum += avg;
+        gradeCount++;
+
+        if (evalObj.level === 'HIGH') {
+          atRisk++;
+          atRiskList.push(Object.assign({ _eval: evalObj }, s));
+        } else if (avg < 75) {
+          failed++;
+        } else {
+          passing++;
+        }
+
+        if (avg >= 90) gradeBuckets['90-100']++;
+        else if (avg >= 80) gradeBuckets['80-89']++;
+        else if (avg >= 75) gradeBuckets['75-79']++;
+        else gradeBuckets['Below 75']++;
+      });
+      return {
+        total, passing, atRisk, failed, insufficient, withAbsences, gradeCount,
+        averageGrade: gradeCount > 0 ? (gradeSum / gradeCount) : 0,
+        gradeBuckets, atRiskList
+      };
+    }
+
+    // Quarterly averages across the scoped students (for the trend chart).
+    // Q1 uses weighted assessment grade; Q2-Q4 not graded yet.
+    function quarterlyAverages(list) {
+      const terms = ['Term 1', 'Term 2', 'Term 3'];
+      if (!list.length) return [null, null, null];
+      return terms.map(term => {
+        if (!AR_ASSESSMENTS.some(a => a.quarter === term)) return null;
+        let sum = 0, count = 0;
+        list.forEach(s => {
+          if (s.riskLevel === 'INSUFFICIENT_DATA' || s.riskLevel === 'INSUFFICIENT DATA') return;
+          const g = studentWeightedGrade(s, term);
+          if (g !== null) { sum += g; count++; }
+        });
+        return count > 0 ? Math.round((sum / count) * 10) / 10 : null;
+      });
+    }
+
+
+    // Dropdown User Menu Toggle
+    const btnTopUserMenu = document.getElementById('btnTopUserMenu');
+    const userProfileDropdown = document.getElementById('userProfileDropdown');
+    if (btnTopUserMenu && userProfileDropdown) {
+      btnTopUserMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userProfileDropdown.classList.toggle('active');
+      });
+      document.addEventListener('click', (e) => {
+        if (!userProfileDropdown.contains(e.target)) userProfileDropdown.classList.remove('active');
+      });
+    }
+
+    // Notification Dropdown Toggle (shared module)
+    BINHS_Notifications.init({
+      bellBtnId: 'btnNotifications',
+      dropdownId: 'notificationDropdown',
+      badgeId: 'notificationBadge',
+      badgePillId: 'notifBadgePill',
+      listId: 'notifDropdownList',
+      onNotificationClick: (logId, notification) => {
+        BINHS_Notifications.markAsRead(logId);
+        window.location.href = 'academic-records.html';
+      }
+    });
+
+    // Mobile Sidebar Toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    if (mobileMenuBtn && sidebar) {
+      mobileMenuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+      });
+    }
+
+    // Logout Handling
+    const handleLogout = () => {
+      sessionStorage.removeItem('binhs_user');
+      window.location.href = 'index.html';
+    };
+    if (document.getElementById('btnLogout')) document.getElementById('btnLogout').addEventListener('click', handleLogout);
+    if (document.getElementById('topBtnLogout')) document.getElementById('topBtnLogout').addEventListener('click', handleLogout);
+
+    // ==========================================
+    // 2. CHART.JS VISUALIZATIONS (Green Theme)
+    // ==========================================
+    let chartSubject = null;
+    let chartStatus = null;
+    let chartAttendance = null;
+
+    function initCharts() {
+      // Chart 1: Quarterly Grade Trend (real Q1-Q4 averages of scoped students)
+      const ctxSubject = document.getElementById('chartSubjectPerformance').getContext('2d');
+      const greenGradient = ctxSubject.createLinearGradient(0, 0, 0, 220);
+      greenGradient.addColorStop(0, '#16A34A');
+      greenGradient.addColorStop(1, '#15803D');
+
+      chartSubject = new Chart(ctxSubject, {
+        type: 'bar',
+        data: {
+          labels: ['Term 1', 'Term 2', 'Term 3'],
+          datasets: [{
+            label: 'Section Average',
+            data: [0, 0, 0, 0],
+            backgroundColor: greenGradient,
+            borderRadius: 6,
+            borderSkipped: false,
+            barThickness: 34,
+            maxBarThickness: 44
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F2A1C',
+              titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+              bodyFont: { family: "'Plus Jakarta Sans', sans-serif" },
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => ` Average: ${ctx.parsed.y}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 50,
+              max: 100,
+              ticks: {
+                stepSize: 10,
+                color: '#64748B',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 }
+              },
+              grid: { color: '#F1F5F9' }
+            },
+            x: {
+              ticks: {
+                color: '#475569',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' }
+              },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      // Chart 2: Student Status Donut (Green / Red / Slate / Gray)
+      const ctxStatus = document.getElementById('chartStudentStatus').getContext('2d');
+      chartStatus = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+          labels: ['Passing', 'At-Risk', 'Failed', 'Insufficient Data'],
+          datasets: [{
+            data: [0, 0, 0, 0],
+            backgroundColor: ['#16A34A', '#EF4444', '#64748B', '#94A3B8'],
+            hoverBackgroundColor: ['#15803D', '#DC2626', '#475569', '#64748B'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            cutout: '72%'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F2A1C',
+              titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+              bodyFont: { family: "'Plus Jakarta Sans', sans-serif" },
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${ctx.raw} students`
+              }
+            }
+          }
+        }
+      });
+
+      // Chart 3: Grade Distribution (real buckets of scoped students)
+      const ctxAttendance = document.getElementById('chartAttendanceRate').getContext('2d');
+      const tealGradient = ctxAttendance.createLinearGradient(0, 0, 0, 200);
+      tealGradient.addColorStop(0, '#22C55E');
+      tealGradient.addColorStop(1, '#15803D');
+
+      chartAttendance = new Chart(ctxAttendance, {
+        type: 'bar',
+        data: {
+          labels: ['90-100', '80-89', '75-79', 'Below 75'],
+          datasets: [{
+            label: 'Students',
+            data: [0, 0, 0, 0],
+            backgroundColor: tealGradient,
+            borderRadius: 6,
+            borderSkipped: false,
+            barThickness: 30,
+            maxBarThickness: 40
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F2A1C',
+              titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+              bodyFont: { family: "'Plus Jakarta Sans', sans-serif" },
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => ` ${ctx.raw} student(s)`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0,
+                color: '#64748B',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 }
+              },
+              grid: { color: '#F1F5F9' }
+            },
+            x: {
+              ticks: {
+                color: '#475569',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '600' }
+              },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // 3. RENDER KPIs, CHARTS, AT-RISK TABLE (live)
+    // ==========================================
+    function renderKPIs(m) {
+      if (!reportsDataAvailable) {
+        ['kpiTotalStudents','kpiPassingStudents','kpiAtRiskStudents','kpiInsufficientData','kpiAbsenceStudents','kpiAverageGrade'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = '—';
+        });
+        return;
+      }
+      setT('kpiTotalStudents', m.total);
+      setT('kpiPassingStudents', m.passing);
+      setT('kpiAtRiskStudents', m.atRisk);
+      setT('kpiInsufficientData', m.insufficient);
+      setT('kpiAbsenceStudents', m.withAbsences);
+      // Display -- when no valid grades exist
+      const avgDisplay = m.gradeCount > 0 ? m.averageGrade.toFixed(1) : 'N/A';
+      setT('kpiAverageGrade', avgDisplay);
+
+      const pct = (n) => m.total ? ((n / m.total) * 100).toFixed(1) + '%' : '0%';
+      const setFooter = (valueId, cls, val) => {
+        const v = document.getElementById(valueId);
+        if (!v) return;
+        const card = v.closest('.reports-kpi-card');
+        const el = card && card.querySelector('.kpi-footer-text.' + cls);
+        if (el) el.textContent = pct(val);
+      };
+      setFooter('kpiPassingStudents', 'success', m.passing);
+      setFooter('kpiAtRiskStudents', 'danger', m.atRisk);
+      setFooter('kpiInsufficientData', 'muted', m.insufficient);
+      setFooter('kpiAbsenceStudents', 'amber', m.withAbsences);
+    }
+
+    function renderCharts(list, m) {
+      if (chartSubject) {
+        chartSubject.data.datasets[0].data = quarterlyAverages(list);
+        chartSubject.update();
+      }
+      if (chartStatus) {
+        chartStatus.data.datasets[0].data = [m.passing, m.atRisk, m.failed, m.insufficient];
+        chartStatus.update();
+        const box = document.getElementById('chartStudentStatus');
+        const center = box && box.closest('.donut-chart-box');
+        const num = center && center.querySelector('.donut-center-number');
+        if (num) num.textContent = m.total;
+      }
+      if (chartAttendance) {
+        chartAttendance.data.datasets[0].data = [
+          m.gradeBuckets['90-100'], m.gradeBuckets['80-89'], m.gradeBuckets['75-79'], m.gradeBuckets['Below 75']
+        ];
+        chartAttendance.update();
+      }
+      const legendItems = document.querySelectorAll('.donut-legend-list .donut-legend-item');
+      if (legendItems.length >= 3) {
+        const setLegend = (idx, val) => {
+          const v = legendItems[idx].querySelector('.legend-value');
+          const p = legendItems[idx].querySelector('.legend-pct');
+          if (v) v.textContent = val;
+          if (p) p.textContent = `(${m.total ? ((val / m.total) * 100).toFixed(1) : 0}%)`;
+        };
+        setLegend(0, m.passing);
+        setLegend(1, m.atRisk);
+        setLegend(2, m.failed);
+        // 4th legend item: Insufficient Data (not part of donut, informational)
+        if (legendItems.length >= 4) {
+          const v = legendItems[3].querySelector('.legend-value');
+          const p = legendItems[3].querySelector('.legend-pct');
+          if (v) v.textContent = m.insufficient;
+          if (p) p.textContent = `(${m.total ? ((m.insufficient / m.total) * 100).toFixed(1) : 0}%)`;
+        }
+      }
+    }
+
+    function renderAtRiskTable(m) {
+      const tbody = document.getElementById('atRiskTableBody');
+      const footer = document.getElementById('atRiskFooterInfo');
+      if (!reportsDataAvailable) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:16px; color:#64748B;">Unable to load student data.</td></tr>';
+        if (footer) footer.textContent = '';
+        return;
+      }
+      const total = m.atRiskList.length;
+      const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+
+      // Clamp currentPage to valid range
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIdx = (currentPage - 1) * PAGE_SIZE;
+      const pageList = m.atRiskList.slice(startIdx, startIdx + PAGE_SIZE);
+
+      if (!total) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:26px; color:#64748B;">No at-risk students in the current scope.</td></tr>';
+        if (footer) footer.textContent = 'Showing 0 students';
+        renderPaginationControls(totalPages, total);
+        return;
+      }
+
+      tbody.innerHTML = pageList.map((s, i) => {
+        const avg = studentAvg(s);
+        const avgDisplay = avg !== null ? avg.toFixed(1) : '--';
+        const abs = s.absences || 0;
+        const absStyle = abs >= 3 ? '' : 'style="color:#D97706;"';
+        return `<tr>
+          <td>${startIdx + i + 1}</td>
+          <td class="student-name-bold">${esc(s.firstName)} ${esc(s.lastName)}</td>
+          <td class="lrn-code">${esc(s.lrn)}</td>
+          <td class="grade-val">${avgDisplay}</td>
+          <td class="absences-val ${abs === 0 ? 'zero' : ''}" ${absStyle}>${abs}</td>
+          <td><span class="badge-risk at-risk">${esc(s._eval.label)}</span></td>
+          <td style="text-align:center;">
+            <button class="btn-table-action" title="View Student Details" onclick="viewStudentModal('${esc(s.lrn)}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12 s 4 -8 11 -8 11 8 11 8 -4 8 -11 8 -11 -8 -11 -8 z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+      if (footer) {
+        const end = Math.min(startIdx + PAGE_SIZE, total);
+        footer.textContent = `Showing ${startIdx + 1}–${end} of ${total} students`;
+      }
+      renderPaginationControls(totalPages, total);
+    }
+
+    function renderPaginationControls(totalPages, total) {
+      const container = document.getElementById('atRiskPaginationBtns');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pagination-btn';
+      prevBtn.textContent = '<';
+      prevBtn.setAttribute('aria-label', 'Previous page');
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderAll();
+        }
+      };
+      container.appendChild(prevBtn);
+
+      for (let p = 1; p <= totalPages; p++) {
+        const btn = document.createElement('button');
+        btn.className = 'pagination-btn' + (p === currentPage ? ' active' : '');
+        btn.textContent = p;
+        btn.onclick = () => {
+          currentPage = p;
+          renderAll();
+        };
+        container.appendChild(btn);
+      }
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'pagination-btn';
+      nextBtn.textContent = '>';
+      nextBtn.setAttribute('aria-label', 'Next page');
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderAll();
+        }
+      };
+      container.appendChild(nextBtn);
+    }
+
+    function updateChartHeaders() {
+      const scope = scopeLabel();
+      const setCardText = (canvasId, h3Text, pText) => {
+        const c = document.getElementById(canvasId);
+        if (!c) return;
+        const card = c.closest('.reports-chart-card');
+        if (!card) return;
+        if (h3Text) { const h = card.querySelector('.chart-card-header h3'); if (h) h.textContent = h3Text; }
+        if (pText) { const p = card.querySelector('.chart-card-header p'); if (p) p.textContent = pText; }
+      };
+      setCardText('chartSubjectPerformance', 'Academic Performance Overview', `Term class average (${scope})`);
+      setCardText('chartStudentStatus', 'Student Status', `Based on current term weighted grade (${scope})`);
+      setCardText('chartAttendanceRate', 'Grade Distribution', `Students per grade bracket (${scope})`);
+    }
+
+     async function renderAll() {
+       await loadAcademicTermDates();
+       await loadReportStudents();
+       await loadAssessments();
+       const editBtn = document.getElementById('btnEditTermDates');
+       if (editBtn) editBtn.onclick = () => { document.getElementById('termDatesEditor').style.display = 'block'; };
+       const saveBtn = document.getElementById('btnSaveTermDates');
+       if (saveBtn) saveBtn.onclick = saveTermDates;
+       const cancelBtn = document.getElementById('btnCancelTermDates');
+       if (cancelBtn) cancelBtn.onclick = () => { document.getElementById('termDatesEditor').style.display = 'none'; };
+       const list = scopedStudents();
+      const m = computeMetrics(list);
+      renderKPIs(m);
+      renderCharts(list, m);
+      renderAtRiskTable(m);
+      updateChartHeaders();
+      setT('printSectionName', scopeLabel());
+      setT('printDateGenerated', new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+    }
+
+    // ==========================================
+    // 3b. FILTER GENERATION & TOAST ALERT
+    // ==========================================
+    function generateFilteredReport() {
+      const sy = document.getElementById('filterSchoolYear').value;
+      const gr = document.getElementById('filterGradeLevel').value;
+      const sec = document.getElementById('filterSection').value;
+      const reportDate = document.getElementById('reportDate').value;
+      const btn = document.getElementById('btnGenerateReport');
+
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span style="display:inline-block; animation:spin 0.8s linear infinite;">&#9696;</span> Generating...`;
+      btn.disabled = true;
+
+      setTimeout(async () => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        const dateLabel = reportDate ? `(Date: ${reportDate})` : '';
+        currentPage = 1;
+        await renderAll();
+        showToast(`Report updated for ${gr} - ${scopeLabel()} (${sy}) ${dateLabel}`);
+      }, 500);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('reportsToast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3200);
+    }
+
+    // ==========================================
+    // 4. EXPORT FUNCTIONS
+    // ==========================================
+    // Export to Excel / CSV (live, role-scoped data)
+    function exportToExcel() {
+      const list = scopedStudents();
+      if (!list.length) { showToast('No students in the current scope to export.'); return; }
+      const sy = document.getElementById('filterSchoolYear').value;
+      const reportDate = document.getElementById('reportDate').value;
+      const genDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const rows = list.map(s => {
+        const evalObj = (typeof AnalyticsEngine !== 'undefined') ? AnalyticsEngine.evaluateStudent(s) : { label: 'NOT AT-RISK' };
+        const avg = studentAvg(s);
+        return [
+          s.lrn,
+          `${s.firstName} ${s.lastName}`,
+          avg !== null ? avg.toFixed(1) : '--',
+          s.absences || 0,
+          evalObj.label,
+          s.parentName || '',
+          s.parentContact || ''
+        ];
+      });
+      const csvData = [
+        ["Biñan Integrated National High School - Early Warning System"],
+        ["Quarterly Academic & Attendance Summary Report"],
+        [`Scope: ${scopeLabel()}`, `School Year: ${sy}`, `Report Date: ${reportDate || 'Current Date'}`, `Generated: ${genDate}`],
+        [],
+        ["LRN", "Student Name", "Grade Average", "Absences (Unexcused)", "Status", "Parent Name", "Parent Contact"],
+        ...rows
+      ];
+
+      const csvContent = "data:text/csv;charset=utf-8," + csvData.map(e => e.join(",")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "BINHS_Academic_Report.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast("Excel/CSV export downloaded successfully!");
+    }
+
+    // Export to PDF / Printable View
+    function exportToPDF() {
+      showToast("Opening Print to PDF dialog...");
+      setTimeout(() => {
+        window.print();
+      }, 400);
+    }
+
+    // ==========================================
+    // 5. MODAL LOGIC
+    // ==========================================
+    function viewStudentModal(lrn) {
+      const modal = document.getElementById('studentDetailModal');
+      const body = document.getElementById('studentModalBody');
+      const s = (BINHS_DATA.students || []).find(x => x.lrn === lrn);
+      if (!s) return;
+
+      const name = `${s.firstName} ${s.lastName}`;
+      const grade = studentAvg(s);
+      const absences = s.absences || 0;
+      const evalObj = (typeof AnalyticsEngine !== 'undefined') ? AnalyticsEngine.evaluateStudent(s) : { label: 'NOT AT-RISK' };
+      const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const gradeDisplay = grade !== null ? grade.toFixed(1) : '--';
+      const gradeColor = grade !== null && grade < 75 ? '#DC2626' : (absences >= 3 ? '#D97706' : '#0F172A');
+
+      let riskReason = [];
+      if (grade !== null && grade < 75.0) riskReason.push(`Academic Criterion: Grade (${grade.toFixed(1)}%) &lt; 75.0% threshold (DepEd Order No. 8)`);
+      if (absences >= 3) riskReason.push(`Attendance Criterion: Accumulated ${absences} unexcused absences (&ge; 3 days)`);
+      if (riskReason.length === 0) riskReason.push('Monitored academic standing');
+
+      body.innerHTML = `
+        <div style="display:flex; align-items:center; gap:16px; padding:12px; background:#F8FAFC; border-radius:12px; border:1px solid #E2E8F0;">
+          <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#16A34A,#15803D); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px;">
+            ${initials}
+          </div>
+          <div>
+            <h4 style="margin:0; font-size:16px; font-weight:800; color:#0F172A;">${esc(name)}</h4>
+            <div style="font-size:12px; color:#475569; font-family:monospace; margin-top:2px;">LRN: ${esc(s.lrn)} &bull; ${esc(s.section)}</div>
+          </div>
+          <div style="margin-left:auto;">
+            <span class="badge-risk" style="font-size:12px; padding:4px 12px;">${esc(evalObj.label)}</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;">
+          <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; padding:12px; border-radius:10px;">
+            <div style="font-size:11px; color:#64748B; font-weight:700;">CURRENT AVERAGE (CURRENT TERM WEIGHTED)</div>
+            <div style="font-size:22px; font-weight:800; color:${gradeColor}; margin-top:4px;">${gradeDisplay}%</div>
+            <div style="font-size:11px; color:#64748B; margin-top:2px;">Threshold: 75.0%</div>
+          </div>
+          <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; padding:12px; border-radius:10px;">
+            <div style="font-size:11px; color:#64748B; font-weight:700;">UNEXCUSED ABSENCES</div>
+            <div style="font-size:22px; font-weight:800; color:${absences >= 3 ? '#DC2626' : '#D97706'}; margin-top:4px;">${absences} Days</div>
+            <div style="font-size:11px; color:#64748B; margin-top:2px;">Threshold: 3 Days</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; background:#FEF2F2; border:1px solid #FECACA; padding:14px; border-radius:10px;">
+          <strong style="color:#DC2626; font-size:12.5px; display:block; margin-bottom:6px;">Decision Tree Inference Trace:</strong>
+          <ul style="margin:0; padding-left:18px; font-size:12px; color:#991B1B; line-height:1.6;">
+            ${riskReason.map(r => `<li>${r}</li>`).join('')}
+          </ul>
+        </div>
+
+        <div style="margin-top:14px; background:#F8FAFC; border:1px solid #E2E8F0; padding:14px; border-radius:10px; font-size:12px;">
+          <strong style="color:#0F172A; display:block; margin-bottom:6px;">Parent / Guardian Contact:</strong>
+          <div style="display:flex; justify-content:space-between; color:#334155;">
+            <span>${esc(s.parentName || 'N/A')}</span>
+            <span style="font-family:monospace; font-weight:700; color:#15803D;">${esc(s.parentContact || 'N/A')}</span>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn-generate-report" style="height:36px; padding:0 16px; font-size:12px;" onclick="closeStudentModal()">Close</button>
+        </div>
+      `;
+
+      modal.classList.add('show');
+    }
+
+    function closeStudentModal() {
+      document.getElementById('studentDetailModal').classList.remove('show');
+    }
+
+    // Detailed Report Options Modals
+    function openReportModal(type) {
+      const modal = document.getElementById('reportPreviewModal');
+      const title = document.getElementById('reportModalTitle');
+      const body = document.getElementById('reportModalBody');
+
+      if (type === 'performance') {
+        const list = scopedStudents();
+        const qAvg = quarterlyAverages(list);
+        const m = computeMetrics(list);
+        title.textContent = `Student Performance Report • ${scopeLabel()}`;
+        body.innerHTML = `
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:14px;">
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; padding:12px; border-radius:10px;">
+              <div style="font-size:11px; color:#166534; font-weight:700;">STUDENTS</div>
+              <div style="font-size:22px; font-weight:800; color:#15803D;">${m.total}</div>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:12px; border-radius:10px;">
+              <div style="font-size:11px; color:#64748B; font-weight:700;">CLASS AVERAGE</div>
+              <div style="font-size:22px; font-weight:800; color:#0F172A;">${m.gradeCount > 0 ? m.averageGrade.toFixed(1) : 'N/A'}%</div>
+            </div>
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; padding:12px; border-radius:10px;">
+              <div style="font-size:11px; color:#166534; font-weight:700;">PASSING</div>
+              <div style="font-size:22px; font-weight:800; color:#15803D;">${m.passing}</div>
+            </div>
+            <div style="background:#FEF2F2; border:1px solid #FECACA; padding:12px; border-radius:10px;">
+              <div style="font-size:11px; color:#991B1B; font-weight:700;">FAILING</div>
+              <div style="font-size:22px; font-weight:800; color:#DC2626;">${m.failed}</div>
+            </div>
+          </div>
+          <p style="font-size:12.5px; color:#334155; margin-bottom:10px;">Term class average across all enrolled students in scope:</p>
+          <div style="border:1px solid #E2E8F0; border-radius:10px; overflow:hidden;">
+            <table class="reports-table" style="font-size:12px;">
+              <thead><tr><th>Term</th><th>Class Average</th><th>Standing</th></tr></thead>
+              <tbody>
+                ${['Term 1', 'Term 2', 'Term 3'].map((q, i) => {
+                  const v = qAvg[i];
+                  const cls = v == null ? '#64748B' : (v >= 75 ? '#16A34A' : '#DC2626');
+                  const label = v == null ? 'No data' : (v >= 90 ? 'Excellent' : v >= 85 ? 'Very Satisfactory' : v >= 80 ? 'Satisfactory' : v >= 75 ? 'Fairly Satisfactory' : 'Did Not Meet Expectation');
+                  return `<tr><td>${q}</td><td>${v == null ? 'N/A' : v.toFixed(1)}</td><td><span style="color:${cls}; font-weight:700;">${label}</span></td></tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; color:#64748B;">DepEd K-12 Grading Transmutation Compliant</span>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-export-tile excel" style="padding:6px 14px; flex-direction:row;" onclick="exportToExcel()">Export CSV</button>
+              <button class="btn-generate-report" style="height:36px; padding:0 14px; font-size:12px;" onclick="window.print()">Print Document</button>
+            </div>
+          </div>
+        `;
+      } else if (type === 'attendance') {
+        const list = scopedStudents();
+        const avgAtt = list.length ? (list.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / list.length) : 0;
+        const atRiskAbs = list.filter(s => (s.absences || 0) >= 3).length;
+        const totalAbs = list.reduce((sum, s) => sum + (Number(s.absences) || 0), 0);
+        title.textContent = `Section Attendance Audit Report • ${scopeLabel()}`;
+        body.innerHTML = `
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:14px;">
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; padding:12px; border-radius:10px;">
+              <div style="font-size:11px; color:#166534; font-weight:700;">OVERALL RATE</div>
+              <div style="font-size:22px; font-weight:800; color:#15803D;">${avgAtt.toFixed(1)}%</div>
+            </div>
+            <div style="background:#FEF2F2; border:1px solid #FECACA; padding:12px; border-radius:10px;">
+              <div style="font-size:11px; color:#991B1B; font-weight:700;">AT-RISK ABSENCES</div>
+              <div style="font-size:22px; font-weight:800; color:#DC2626;">${atRiskAbs} Students</div>
+            </div>
+            <div style="background:#FFFBEB; border:1px solid #FDE68A; padding:12px; border-radius:10px;">
+              <div style="font-size:11px; color:#92400E; font-weight:700;">TOTAL UNEXCUSED</div>
+              <div style="font-size:22px; font-weight:800; color:#D97706;">${totalAbs} Days</div>
+            </div>
+          </div>
+          <p style="font-size:12px; color:#475569; margin:0;">Across ${list.length} student(s) in scope, average attendance is ${avgAtt.toFixed(1)}%, with ${atRiskAbs} student(s) exceeding the 3-day unexcused absence threshold requiring parent intervention.</p>
+          <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+            <button class="btn-generate-report" style="height:36px; padding:0 16px; font-size:12px;" onclick="closeReportModal()">Close</button>
+          </div>
+        `;
+      } else if (type === 'atrisk') {
+        const list = scopedStudents();
+        const m = computeMetrics(list);
+        title.textContent = `At-Risk Students Official Summary • ${scopeLabel()}`;
+        const rows = m.atRiskList.length ? m.atRiskList.map(s => {
+          const avg = (s.computedGrade !== null && s.computedGrade !== undefined) ? Number(s.computedGrade) : studentAvg(s);
+          const avgDisplay = avg !== null ? avg.toFixed(1) : '--';
+          const abs = s.absences || 0;
+          let reason = [];
+          if (avg !== null && avg < 75) reason.push(`Grade < 75.0% (${avg.toFixed(1)})`);
+          if (abs >= 3) reason.push(`${abs} unexcused absences`);
+          return `<tr><td>${esc(s.firstName)} ${esc(s.lastName)}</td><td>${esc(s.lrn)}</td><td>${avgDisplay}</td><td>${abs}</td><td>${reason.join(' and ') || 'Monitored'}</td></tr>`;
+        }).join('') : '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No at-risk students in the current scope.</td></tr>';
+        body.innerHTML = `
+          <p style="font-size:12.5px; color:#334155; margin-bottom:12px;">The following ${m.atRiskList.length} student(s) have been classified as <strong>HIGH RISK</strong> under Chapter 3 Decision Tree criteria for academic and attendance deficiencies:</p>
+          <div style="border:1px solid #E2E8F0; border-radius:10px; overflow:hidden;">
+            <table class="reports-table" style="font-size:12px;">
+              <thead><tr><th>Student Name</th><th>LRN</th><th>Grade</th><th>Absences</th><th>Primary Risk Reason</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <a href="early-warning.html" style="font-size:12px; color:#15803D; font-weight:700;">Open Early Warning Engine &rarr;</a>
+            <button class="btn-generate-report" style="height:36px; padding:0 16px; font-size:12px;" onclick="window.print()">Print Report</button>
+          </div>
+        `;
+      } else if (type === 'notifications') {
+        title.textContent = 'Parent SMS Notification Audit Trail';
+        const logs = (BINHS_DATA.notificationLogs || []);
+        const rows = logs.length ? logs.map(l => {
+          const delivered = String(l.status || '').toLowerCase().includes('deliver');
+          return `<tr>
+            <td>${esc(l.dateSent || '')}</td>
+            <td>${esc((BINHS_DATA.students.find(s => s.lrn === l.lrn) || {}).firstName || '')} ${esc((BINHS_DATA.students.find(s => s.lrn === l.lrn) || {}).lastName || '')}</td>
+            <td>${esc(l.parentContact)}</td>
+            <td><span style="color:${delivered ? '#16A34A' : '#D97706'}; font-weight:700;">${delivered ? '&#10003; DELIVERED' : '&#8987; ' + esc(l.status)}</span></td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:#64748B;">No SMS notifications have been logged yet.</td></tr>';
+        body.innerHTML = `
+          <p style="font-size:12.5px; color:#334155; margin-bottom:12px;">Audit trail of parent SMS notifications dispatched via the TextBee gateway (${logs.length} total):</p>
+          <div style="border:1px solid #E2E8F0; border-radius:10px; overflow:hidden;">
+            <table class="reports-table" style="font-size:12px;">
+              <thead><tr><th>Timestamp</th><th>Recipient (Student)</th><th>Contact</th><th>Status</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+            <a href="sms-logs.html" style="font-size:12px; color:#15803D; font-weight:700;">View Full SMS Gateway Logs &rarr;</a>
+            <button class="btn-generate-report" style="height:36px; padding:0 16px; font-size:12px;" onclick="closeReportModal()">Close</button>
+          </div>
+        `;
+      } else if (type === 'cross') {
+        // Admin-only: compare every section present in the dataset.
+        const all = (BINHS_DATA && BINHS_DATA.students) ? BINHS_DATA.students : [];
+        const sections = [...new Set(all.map(s => s.section))].sort();
+        const rows = sections.map(sec => {
+          const list = all.filter(s => s.section === sec);
+          const mm = computeMetrics(list);
+          const avgAtt = list.length ? (list.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / list.length) : 0;
+          const riskPct = mm.total ? ((mm.atRisk / mm.total) * 100).toFixed(1) : '0.0';
+          return `<tr>
+            <td>${esc(sec)}</td>
+            <td>${mm.total}</td>
+            <td>${mm.gradeCount > 0 ? mm.averageGrade.toFixed(1) : '--'}%</td>
+            <td>${avgAtt.toFixed(1)}%</td>
+            <td><span style="color:${mm.atRisk > 0 ? '#DC2626' : '#16A34A'}; font-weight:700;">${mm.atRisk} (${riskPct}%)</span></td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No section data available.</td></tr>';
+        title.textContent = 'Cross-Section Performance Comparison • School-Wide';
+        body.innerHTML = `
+          <p style="font-size:12.5px; color:#334155; margin-bottom:12px;">Comparative academic standing across all sections in the school (administrative overview):</p>
+          <div style="border:1px solid #E2E8F0; border-radius:10px; overflow:hidden;">
+            <table class="reports-table" style="font-size:12px;">
+              <thead><tr><th>Section</th><th>Students</th><th>Avg Grade</th><th>Avg Attendance</th><th>At-Risk</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+            <button class="btn-generate-report" style="height:36px; padding:0 16px; font-size:12px;" onclick="window.print()">Print Report</button>
+          </div>
+        `;
+      }
+
+      modal.classList.add('show');
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportPreviewModal').classList.remove('show');
+    }
+
+    // Close on backdrop click
+    window.addEventListener('click', (e) => {
+      const studentModal = document.getElementById('studentDetailModal');
+      const reportModal = document.getElementById('reportPreviewModal');
+      if (e.target === studentModal) closeStudentModal();
+      if (e.target === reportModal) closeReportModal();
+    });
+
+    // Initialize on DOM load
+     (async () => {
+      // Set Report Date to current local date
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+      const reportDate = document.getElementById('reportDate');
+      if (reportDate) reportDate.value = todayStr;
+
+      // Fetch school year from settings API
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (session?.token) {
+        try {
+          const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+          const res = await fetch(`${apiBase}/api/settings`, {
+            headers: { Authorization: `Bearer ${session.token}` }
+          });
+          if (res.ok) {
+            const result = await res.json();
+            if (result.success && result.settings && result.settings.school_year) {
+              const syValue = result.settings.school_year;
+              // Populate the school year dropdown
+              const sySelect = document.getElementById('filterSchoolYear');
+              if (sySelect) {
+                sySelect.replaceChildren();
+                const option = new Option(syValue, syValue);
+                sySelect.appendChild(option);
+                sySelect.value = syValue;
+              }
+              // Update print header
+              const printSy = document.getElementById('printSchoolYear');
+              if (printSy) printSy.textContent = syValue;
+            } else if (result.success && result.raw && Array.isArray(result.raw)) {
+              // Fallback: check raw settings data for school_year
+              // Only Admins receive raw data; Teachers get filtered settings
+              const userRole = JSON.parse(sessionStorage.getItem('binhs_user') || 'null')?.role;
+              if (userRole !== 'Admin') return;
+              const syRow = result.raw.find(r => r.setting_key === 'school_year');
+              if (syRow) {
+                const syValue = syRow.setting_value;
+                const sySelect = document.getElementById('filterSchoolYear');
+                if (sySelect) {
+                  sySelect.replaceChildren();
+                  const option = new Option(syValue, syValue);
+                  sySelect.appendChild(option);
+                  sySelect.value = syValue;
+                }
+                const printSy = document.getElementById('printSchoolYear');
+                if (printSy) printSy.textContent = syValue;
+              }
+            }
+          }
+        } catch (e) {
+          console.info('[Reports] Could not fetch school year:', e.message);
+        }
+      }
+
+      initCharts();
+      currentPage = 1;
+       await renderAll();
+     })();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | Dashboard - Early Warning System</title>
+  <meta name="description" content="Biñan Integrated National High School - Dashboard with predictive analyticq1: computedGrade, q2: computedGrade, q3: computedGrade, q4: computedGrade, student risk distribution, and early warning indicators.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Auth Guard -->
+  <script>
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[character]));
+    }
+
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+  </script>
+
+  <div class="app-layout">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="school-logo-badge">
+          <svg class="school-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 8L15 22V52C15 72 30 89 50 95C70 89 85 72 85 52V22L50 8Z" fill="#166534" stroke="#F59E0B" stroke-width="3"/>
+            <path d="M50 14L21 26V50C21 67 33 82 50 88C67 82 79 67 79 50V26L50 14Z" fill="#123524"/>
+            <path d="M30 65C40 60 48 61 50 63C52 61 60 60 70 65C62 55 55 55 50 58C45 55 38 55 30 65Z" fill="#F59E0B"/>
+            <circle cx="50" cy="38" r="9" fill="#F59E0B"/>
+            <path d="M48 24H52V35H48V24Z" fill="#E2E8F0"/>
+            <path d="M43 45L57 45L54 55L46 55Z" fill="#22C55E"/>
+            <circle cx="34" cy="33" r="2.5" fill="#F59E0B"/>
+            <circle cx="66" cy="33" r="2.5" fill="#F59E0B"/>
+            <circle cx="50" cy="22" r="2.5" fill="#F59E0B"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">BINHS</div>
+          <div class="brand-subtitle">Early Warning System</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="student.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Students</span>
+        </a>
+        <a href="academic-records.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <path d="M8 14h8"/><path d="M8 18h5"/>
+          </svg>
+          <span>Academic Records</span>
+        </a>
+        <a href="attendance.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>Attendance</span>
+        </a>
+        <a href="early-warning.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>Early Warning</span>
+        </a>
+        <a href="reports.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>Reports</span>
+        </a>
+        <a href="academic-settings.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Academic Settings</span>
+        </a>
+
+        <!-- Admin Only -->
+        <div class="admin-menu-section" id="adminMenuSection" style="display:none;">
+          <div class="menu-divider">ADMIN CONTROLS</div>
+          <a href="user-management.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+            <span>Manage Users</span>
+          </a>
+          <a href="sms-logs.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="13" y2="14"/>
+            </svg>
+            <span>SMS Gateway Logs</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="current-user-card" id="sidebarUserCard">
+          <div class="user-avatar-circle" id="sidebarAvatar">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </div>
+          <div class="user-info-text">
+            <div class="user-name" id="sidebarUserName">Roldan R. Arreza</div>
+            <div class="user-role" id="sidebarUserRole">Teacher / Advisor</div>
+            </div>
+        </div>
+        <div class="sidebar-actions">
+          <button class="footer-btn logout-btn" id="btnLogout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-wrapper">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Monitor your students and early warning indicators.</p>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <!-- Notifications -->
+          <div class="notification-wrapper">
+            <button class="icon-btn" id="btnNotifications" title="System Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="badge-count" id="notificationBadge" hidden>0</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="dropdown-header">
+                <strong>Alerts &amp; Early Warnings</strong>
+                <span class="badge-pill" id="notifBadgePill">0</span>
+              </div>
+              <div class="dropdown-list" id="notifDropdownList">
+              </div>
+            </div>
+          </div>
+
+          <!-- User Menu -->
+          <div class="user-menu-wrapper">
+            <button class="top-user-pill" id="btnTopUserMenu" type="button" aria-expanded="false" aria-label="User profile menu">
+              <div class="top-user-avatar-wrapper">
+                <div class="top-user-avatar" id="topUserAvatar">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <span class="top-user-status-dot" title="Online"></span>
+              </div>
+              <div class="top-user-details">
+                <span class="top-user-name" id="topUserName">Roldan R. Arreza</span>
+                <span class="top-user-role" id="topUserRole">Teacher / Advisor</span>
+              </div>
+              <svg class="top-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="user-dropdown-menu" id="userProfileDropdown">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-avatar">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <div class="user-dropdown-info">
+                  <strong class="user-dropdown-name" id="dropdownUserName">Roldan R. Arreza</strong>
+                  <span class="user-dropdown-role" id="dropdownUserRole">Teacher / Advisor</span>
+                  <span class="user-dropdown-badge" id="dropdownUserSection">Grade 12 - STEM A Adviser</span>
+                </div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <div class="user-dropdown-actions">
+                <div class="user-dropdown-divider"></div>
+                <button class="user-dropdown-item logout-item" id="topBtnLogout" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <div class="content-container">
+        <!-- Section Banner -->
+        <div class="section-banner">
+          <div class="banner-left">
+            <div class="banner-icon-box">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+              </svg>
+            </div>
+            <div class="banner-meta">
+              <h2 class="banner-title" id="bannerSectionTitle"></h2>
+              <span class="banner-sub" id="bannerAcademicYear">Academic Year 2026 - 2027</span>
+            </div>
+          </div>
+          <div class="banner-right">
+            <div class="banner-calendar-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="banner-date-text">
+              <div class="date-main" id="liveDateString"></div>
+              <div class="date-sub" id="liveDayString"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Stat Metric Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box blue">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+              </div>
+              <div class="metric-label">TOTAL STUDENTS</div>
+            </div>
+            <div class="metric-value" id="statTotalStudents">—</div>
+            <div class="metric-footnote">Students in your assigned section</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box red">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/>
+                </svg>
+              </div>
+              <div class="metric-label">AT-RISK STUDENTS</div>
+            </div>
+            <div class="metric-value danger" id="statAtRiskStudents">—</div>
+            <div class="metric-footnote">Requires attention</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/>
+                </svg>
+              </div>
+              <div class="metric-label">ATTENDANCE RATE</div>
+            </div>
+            <div class="metric-value" id="statAttendanceRate">—</div>
+            <div class="metric-footnote">Current attendance rate</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box amber">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                </svg>
+              </div>
+              <div class="metric-label">AVERAGE GRADE</div>
+            </div>
+            <div class="metric-value" id="statAverageGrade">—</div>
+            <div class="metric-footnote">Current academic average</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <h3 class="chart-title">Academic Performance</h3>
+                <p class="chart-subtitle" id="academicChartSubtitle">Average student grade by quarter</p>
+              </div>
+<div class="filter-dropdown-wrapper">
+              <select id="subjectFilterSelect" class="styled-select">
+                <option value="General Mathematics">General Mathematics</option>
+              </select>
+            </div>
+            </div>
+            <div class="chart-canvas-container">
+              <canvas id="academicPerformanceChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <h3 class="chart-title">Student Risk Distribution</h3>
+                <p class="chart-subtitle">Distribution of students by risk level</p>
+              </div>
+            </div>
+            <div class="donut-chart-container">
+              <div class="donut-canvas-wrapper">
+                <canvas id="riskDonutChart"></canvas>
+                <div class="donut-center-label">
+                  <span class="donut-number" id="donutTotalCount">—</span>
+                  <span class="donut-text">Total</span>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div class="legend-item">
+                  <span class="legend-dot green"></span>
+                  <span class="legend-name">Not At-Risk</span>
+                  <span class="legend-stat" id="legendNotRisk">—</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot amber"></span>
+                  <span class="legend-name">Monitor (Moderate)</span>
+                  <span class="legend-stat" id="legendModerate">0 (0%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot red"></span>
+                  <span class="legend-name">At-Risk</span>
+                  <span class="legend-stat" id="legendAtRisk">—</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot muted"></span>
+                  <span class="legend-name">Insufficient Data</span>
+                  <span class="legend-stat" id="legendInsufficient">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Early Warning Students Table -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <div class="table-title-group">
+              <div class="warning-icon-pill">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="table-title">Early Warning Students</h3>
+                <p class="table-subtitle">Students who are at risk based on academic performance and attendance.</p>
+              </div>
+            </div>
+            <a href="student.html" class="link-btn" id="btnViewAllStudentsFromDash">
+              View All Students
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="dashboardAtRiskTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Student Name</th>
+                  <th>LRN</th>
+                  <th>Average Grade</th>
+                  <th>Unexcused Absences</th>
+                  <th>Risk Status</th>
+                  <th>Reason</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardAtRiskTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Student Detail Modal -->
+  <div class="modal-overlay" id="studentDetailModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="modalStudentName">Student Name</h3>
+          <span class="modal-subtitle" id="modalStudentLrn">LRN: --</span>
+        </div>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="student-profile-grid">
+          <div class="profile-card">
+            <div class="profile-item"><span class="profile-label">Section &amp; Strand:</span><span class="profile-val" id="modalStudentSection">--</span></div>
+            <div class="profile-item"><span class="profile-label">Gender:</span><span class="profile-val" id="modalStudentGender">--</span></div>
+            <div class="profile-item"><span class="profile-label">Parent / Guardian:</span><span class="profile-val" id="modalStudentParent">--</span></div>
+            <div class="profile-item"><span class="profile-label">Parent Contact:</span><span class="profile-val font-mono" id="modalStudentContact">--</span></div>
+            <div class="profile-item"><span class="profile-label">Address:</span><span class="profile-val" id="modalStudentAddress">--</span></div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-item"><span class="profile-label">Current Academic Average:</span><span class="profile-val grade-val danger" id="modalStudentGrade">--</span></div>
+            <div class="profile-item"><span class="profile-label">Unexcused Absences:</span><span class="profile-val absences-val danger" id="modalStudentAbsences">--</span></div>
+            <div class="profile-item"><span class="profile-label">Attendance Rate:</span><span class="profile-val" id="modalStudentAttendanceRate">--</span></div>
+            <div class="profile-item"><span class="profile-label">Risk Category:</span><span id="modalStudentRiskBadge" class="badge-pill danger">--</span></div>
+          </div>
+        </div>
+        <div class="decision-breakdown-box">
+          <div class="breakdown-header">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/></svg>
+            <strong>Predictive Decision Tree Assessment:</strong>
+          </div>
+          <p id="modalDecisionExplanation" class="breakdown-text">--</p>
+        </div>
+        <div class="quarter-scores-bar">
+          <div class="q-score-box"><span class="q-label">Term 1</span><span class="q-val" id="modalQ1Grade">--</span></div>
+          <div class="q-score-box"><span class="q-label">Term 2</span><span class="q-val" id="modalQ2Grade">--</span></div>
+          <div class="q-score-box"><span class="q-label">Term 3</span><span class="q-val" id="modalQ3Grade">--</span></div>
+          <div class="q-score-box current"><span class="q-label">Legacy Q4</span><span class="q-val" id="modalQ4Grade">--</span></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Close</button>
+        <button class="btn btn-danger" id="modalBtnTriggerSms">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Send SMS Alert to Parent</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMS Composer Modal -->
+  <div class="modal-overlay" id="smsComposerModal">
+    <div class="modal-dialog modal-md">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Trigger Parent SMS Notification</h3>
+          <span class="modal-subtitle">Direct dispatch via TextBee API Gateway</span>
+        </div>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="smsComposerForm">
+          <div class="form-group">
+            <label for="smsRecipientPhone">Parent Contact Number:</label>
+            <input type="text" id="smsRecipientPhone" class="styled-input" placeholder="09XXXXXXXXX or +639XXXXXXXXX" required>
+          </div>
+          <div class="form-group">
+            <label for="smsStudentName">Student Identified:</label>
+            <input type="text" id="smsStudentName" class="styled-input" readonly>
+          </div>
+          <div class="form-group">
+            <label for="smsMessageText">Message Template (Standard DepEd/BINHS format):</label>
+            <textarea id="smsMessageText" class="styled-textarea" rows="5" required></textarea>
+            <div class="char-count-bar">
+              <span id="smsCharCount">0 / 160 characters (1 SMS credit)</span>
+            </div>
+          </div>
+        </form>
+        <div class="phone-preview-container">
+          <div class="phone-header">
+            <span class="phone-notch"></span>
+            <span class="phone-time">BINHS SMS ALERT</span>
+          </div>
+          <div class="phone-chat-bubble" id="phoneBubblePreview">
+            Your message preview will appear here...
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-danger" id="btnConfirmSendSms">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Dispatch SMS Now</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/data-secure.js?v=20261107"></script>
+  <script src="js/grade-calc.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/sms.js?v=20261107"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    // ==================== AUTH & USER SETUP ====================
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!currentUser || !currentUser.token) {
+      window.location.href = 'index.html';
+      throw new Error('Authentication required');
+    }
+    
+    // Populate user info
+    ['sidebarUserName','topUserName','dropdownUserName'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = currentUser.name;
+    });
+    ['sidebarUserRole','topUserRole','dropdownUserRole'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = currentUser.role === 'Admin' ? 'System Administrator' : 'Teacher / Advisor';
+    });
+    // Set section badge from user's assigned sections
+    const sections = Array.isArray(currentUser.sections) ? currentUser.sections.filter(Boolean) : [];
+    const sectionText = currentUser.role === 'Admin' ? 'All SHS Sections' : (sections.length ? sections.join(', ') + ' Adviser' : 'No section assigned');
+    const sectionEl = document.getElementById('sidebarUserSection');
+    if (sectionEl) sectionEl.textContent = sectionText;
+    const dropdownSectionEl = document.getElementById('dropdownUserSection');
+    if (dropdownSectionEl) dropdownSectionEl.textContent = sectionText;
+    if (currentUser.role === 'Admin') {
+      document.getElementById('adminMenuSection').style.display = 'block';
+    }
+
+    // ==================== LIVE CLOCK ====================
+    function updateClock() {
+      const now = new Date();
+      const dateEl = document.getElementById('liveDateString');
+      const dayEl = document.getElementById('liveDayString');
+      if (dateEl) dateEl.textContent = 'Today is ' + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      if (dayEl) dayEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+    updateClock();
+    setInterval(updateClock, 60000);
+
+    // ==================== MOBILE SIDEBAR ====================
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    if (mobileBtn) mobileBtn.onclick = () => sidebar.classList.toggle('open');
+    document.addEventListener('click', e => {
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== mobileBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+
+    // ==================== NOTIFICATIONS (shared module) ====================
+    BINHS_Notifications.init({
+      bellBtnId: 'btnNotifications',
+      dropdownId: 'notificationDropdown',
+      badgeId: 'notificationBadge',
+      badgePillId: 'notifBadgePill',
+      listId: 'notifDropdownList',
+      onNotificationClick: (logId, notification) => {
+        // Mark as read and navigate to Academic Records for grade details
+        BINHS_Notifications.markAsRead(logId);
+        window.location.href = 'academic-records.html';
+      }
+    });
+
+    // ==================== USER DROPDOWN ====================
+    const userBtn = document.getElementById('btnTopUserMenu');
+    const userDropdown = document.getElementById('userProfileDropdown');
+    if (userBtn && userDropdown) {
+      userBtn.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle('active'); };
+      document.addEventListener('click', (e) => { if (!userDropdown.contains(e.target)) userDropdown.classList.remove('active'); });
+    }
+
+    // ==================== LOGOUT ====================
+    function doLogout() {
+      sessionStorage.removeItem('binhs_user');
+      window.location.href = 'index.html';
+    }
+    document.getElementById('btnLogout')?.addEventListener('click', doLogout);
+    document.getElementById('topBtnLogout')?.addEventListener('click', doLogout);
+
+    // ==================== MODAL HELPERS ====================
+    let selectedStudentLrn = null;
+    function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+    function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+      btn.onclick = () => btn.closest('.modal-overlay')?.classList.remove('active');
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+    });
+
+    // ==================== STUDENT DETAIL MODAL ====================
+    function openStudentDetailModal(lrn) {
+      const student = BINHS_DATA.students.find(s => String(s.lrn) === String(lrn));
+      if (!student) return;
+      selectedStudentLrn = lrn;
+      const evalObj = AnalyticsEngine.evaluateStudent(student);
+      const gradeVal = student.computedGrade !== null && student.computedGrade !== undefined ? Number(student.computedGrade) : (student.q4 === null || student.q4 === undefined ? null : Number(student.q4));
+      const grade = gradeVal !== null ? gradeVal.toFixed(1) : '--';
+
+      document.getElementById('modalStudentName').textContent = `${student.firstName} ${student.lastName}`;
+      document.getElementById('modalStudentLrn').textContent = `LRN: ${student.lrn}`;
+      document.getElementById('modalStudentSection').textContent = student.section;
+      document.getElementById('modalStudentGender').textContent = student.gender;
+      document.getElementById('modalStudentParent').textContent = student.parentName;
+      document.getElementById('modalStudentContact').textContent = student.parentContact;
+      document.getElementById('modalStudentAddress').textContent = student.address;
+      document.getElementById('modalStudentGrade').textContent = gradeVal !== null ? `${gradeVal.toFixed(1)}%` : '--';
+      document.getElementById('modalStudentAbsences').textContent = `${student.absences} Days`;
+      document.getElementById('modalStudentAttendanceRate').textContent = `${student.attendanceRate}%`;
+      
+      const riskBadge = document.getElementById('modalStudentRiskBadge');
+      riskBadge.textContent = evalObj.label;
+      riskBadge.className = `badge-pill ${evalObj.badgeClass}`;
+
+      document.getElementById('modalQ1Grade').textContent = student.q1 === null || student.q1 === undefined ? '--' : student.q1;
+      document.getElementById('modalQ2Grade').textContent = student.q2 === null || student.q2 === undefined ? '--' : student.q2;
+      document.getElementById('modalQ3Grade').textContent = student.q3 === null || student.q3 === undefined ? '--' : student.q3;
+      document.getElementById('modalQ4Grade').textContent = student.q4 === null || student.q4 === undefined ? '--' : student.q4;
+      document.getElementById('modalDecisionExplanation').innerHTML = evalObj.treeTrace.map(escapeHtml).join('<br>');
+
+      openModal('studentDetailModal');
+    }
+
+    document.getElementById('modalBtnTriggerSms')?.addEventListener('click', () => {
+      if (selectedStudentLrn) {
+        closeModal('studentDetailModal');
+        openSmsComposer(selectedStudentLrn);
+      }
+    });
+
+    // ==================== SMS COMPOSER ====================
+    async function openSmsComposer(lrn) {
+      const student = BINHS_DATA.students.find(s => String(s.lrn) === String(lrn));
+      if (!student) return;
+      if (!student.parentContact) { showToast('No parent contact number on file.', 'danger'); return; }
+      await loadAcademicTermDates();
+      student.currentTerm = BINHS_DATA?.currentTerm || student.currentTerm || 1;
+      if (!student.subject || student.subject === 'Not assigned') {
+        try {
+          const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+          const token = currentUser?.token || session?.token;
+          if (token) {
+             const res = await fetch(`${window.location.origin}/api/teacher-subject-sections?section=${encodeURIComponent(student.section)}`, { headers: { Authorization: 'Bearer ' + token } });
+            if (res.ok) {
+              const result = await res.json();
+              const defaultAssignment = Array.isArray(result.assignments) ? (result.assignments.find(a => Number(a.is_default) === 1) || result.assignments[0]) : null;
+              if (defaultAssignment?.subject) student.subject = defaultAssignment.subject;
+            }
+          }
+        } catch (e) { console.info('Could not load subject:', e.message); }
+      }
+      if (!student.subject) student.subject = 'Not assigned';
+      if (student.subject === 'Not assigned') { showToast('Subject assignment could not be resolved.', 'danger'); return; }
+      const evalObj = AnalyticsEngine.evaluateStudent(student);
+      const template = SmsGateway.generateTemplate(student, evalObj, student.subject, student.currentTerm);
+
+      document.getElementById('smsRecipientPhone').value = student.parentContact;
+      document.getElementById('smsStudentName').value = `${student.firstName} ${student.lastName} (LRN: ${student.lrn})`;
+      document.getElementById('smsMessageText').value = template;
+      document.getElementById('phoneBubblePreview').textContent = template;
+      updateCharCount();
+      openModal('smsComposerModal');
+
+      document.getElementById('smsMessageText').oninput = () => {
+        document.getElementById('phoneBubblePreview').textContent = document.getElementById('smsMessageText').value;
+        updateCharCount();
+      };
+
+      document.getElementById('btnConfirmSendSms').onclick = async () => {
+        const phone = document.getElementById('smsRecipientPhone').value;
+        const msg = document.getElementById('smsMessageText').value;
+        if (!phone || !msg) return;
+        await SmsGateway.sendSms({ lrn, parentContact: phone, message: msg });
+        closeModal('smsComposerModal');
+        showToast(`SMS sent to ${student.parentName} (${phone}) via TextBee.`, 'success');
+      };
+    }
+
+    function updateCharCount() {
+      const len = document.getElementById('smsMessageText').value.length;
+      document.getElementById('smsCharCount').textContent = `${len} / 160 characters (${Math.ceil(len / 160) || 1} SMS credit)`;
+    }
+
+    // ==================== TOAST ====================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ==================== DASHBOARD RENDER ====================
+    // ===== OFFICIAL QUARTERLY GRADE (via GradeCalc) =====
+    function dashboardAssessmentCategory(type) {
+      return GradeCalc.typeToComponent(type);
+    }
+    const DASH_GRADE_WEIGHTS = GradeCalc.getSubjectWeights('General Mathematics');
+    function safeNumber(v) {
+      return v === null || v === undefined ? null : Number(v);
+    }
+
+     function dashboardWeightedGrade(student, assessments, assessmentScores, term) {
+      if (!assessments || !assessments.length) return null;
+      let savedSubject = null;
+      try { savedSubject = localStorage.getItem('binhs_selected_subject'); } catch (e) {}
+      const subjectName = (savedSubject && Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects.includes(savedSubject)) ? savedSubject : (Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0] ? BINHS_DATA.subjects[0] : 'General Mathematics');
+      const quarterLabel = term ? `Term ${term}` : `Term ${BINHS_DATA?.currentTerm || 1}`;
+      const scoreMap = {};
+      assessments.forEach(a => {
+        const key = `${student.lrn}:${a.id}`;
+        const val = assessmentScores[key];
+        if (val !== undefined && val !== null) scoreMap[a.id] = Number(val);
+      });
+      const result = GradeCalc.calculateQuarterlyGrade(assessments, quarterLabel, subjectName, scoreMap);
+      return result.finalGrade;
+    }
+
+    async function renderDashboard() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      const assessments = [];
+      const assessmentScores = {};
+
+       if (session?.token && typeof fetch !== 'undefined') {
+         try {
+           const currentTerm = BINHS_DATA?.currentTerm || 1;
+           const studentRes = await fetch(`${window.location.origin}/api/students?term=${encodeURIComponent('Term ' + currentTerm)}`, {
+             headers: { Authorization: `Bearer ${session.token}` }
+           });
+           if (studentRes.ok) {
+             const studentResult = await studentRes.json();
+             if (studentResult.success && Array.isArray(studentResult.students)) {
+               BINHS_DATA.students = studentResult.students;
+             }
+           }
+         } catch (e) { console.info('[Dashboard] Could not load students:', e.message); }
+       }
+
+       if (session?.token && typeof fetch !== 'undefined') {
+         try {
+           const currentTerm = BINHS_DATA?.currentTerm || 1;
+          const quarterLabel = `Term ${currentTerm}`;
+          let savedSubject = null;
+          try { savedSubject = localStorage.getItem('binhs_selected_subject'); } catch (e) {}
+          const subject = (savedSubject && Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects.includes(savedSubject)) ? savedSubject : (Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0] ? BINHS_DATA.subjects[0] : 'General Mathematics');
+           const res = await fetch(`${window.location.origin}/api/assessments?subject=${encodeURIComponent(subject)}`, {
+             headers: { Authorization: `Bearer ${session.token}` }
+           });
+          if (res.ok) {
+            const result = await res.json();
+            if (result.success && Array.isArray(result.assessments)) {
+               assessments.push(...result.assessments.map(a => ({ ...a, quarter: (String(a.quarter || '').match(/(\d+)/) ? 'Term ' + String(a.quarter).match(/(\d+)/)[1] : a.quarter) })));
+              await Promise.all(result.assessments.map(async (a) => {
+                const sRes = await fetch(`${window.location.origin}/api/assessments/${a.id}/scores`, {
+                  headers: { Authorization: `Bearer ${session.token}` }
+                });
+                if (sRes.ok) {
+                  const sResult = await sRes.json();
+                  if (sResult.success && Array.isArray(sResult.scores)) {
+                    sResult.scores.forEach(row => {
+                      assessmentScores[`${row.lrn}:${a.id}`] = Number(row.score);
+                    });
+                  }
+                }
+              }));
+            }
+          }
+        } catch (e) {
+          console.info('[Dashboard] Could not load assessments:', e.message);
+        }
+
+        // Load available subjects from backend
+        try {
+          const subjRes = await fetch(`${window.location.origin}/api/subjects`, {
+            headers: { Authorization: `Bearer ${session.token}` }
+          });
+          if (subjRes.ok) {
+            const subjResult = await subjRes.json();
+            if (subjResult.success && Array.isArray(subjResult.subjects)) {
+              const subjSelect = document.getElementById('subjectFilterSelect');
+              if (subjSelect) {
+                subjSelect.innerHTML = subjResult.subjects.map(s => `<option value="${escapeHtml(s.subject || s.name || s)}">${escapeHtml(s.subject || s.name || s)}</option>`).join('');
+                let savedSubject = null;
+                try { savedSubject = localStorage.getItem('binhs_selected_subject'); } catch (e) {}
+                if (savedSubject && subjSelect.querySelector('option[value="' + savedSubject + '"]')) {
+                  subjSelect.value = savedSubject;
+                } else {
+                  const gmOption = subjSelect.querySelector('option[value="General Mathematics"]');
+                  if (gmOption) subjSelect.value = 'General Mathematics';
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.info('[Dashboard] Could not load subjects:', e.message);
+        }
+      }
+
+      // Load students from API with ML predictions
+      let apiStudents = [];
+      let apiStudentsLoaded = false;
+      let apiStudentCount = 0;
+      let dataSource = 'none';
+      if (session?.token && typeof fetch !== 'undefined') {
+        try {
+           const res = await fetch(`${window.location.origin}/api/students?term=${encodeURIComponent('Term ' + (BINHS_DATA?.currentTerm || 1))}`, {
+             headers: { Authorization: `Bearer ${session.token}` }
+           });
+          if (res.ok) {
+            const result = await res.json();
+            if (result.success && Array.isArray(result.students)) {
+              apiStudents = result.students;
+              apiStudentsLoaded = true;
+              apiStudentCount = result.students.length;
+              dataSource = 'api';
+              console.log(`[Dashboard] Students loaded from API: ${apiStudentCount} students`);
+            } else {
+              console.warn('[Dashboard] /api/students returned non-success:', result.success);
+            }
+          }
+        } catch (e) {
+          console.info('[Dashboard] Could not load students from API:', e.message);
+        }
+      }
+
+      // Build student list from API data (declared before attendance so it is in scope)
+      const students = apiStudents.length > 0
+        ? apiStudents.map(s => {
+            const computedGrade = dashboardWeightedGrade(s, assessments, assessmentScores);
+            return {
+              lrn: s.lrn,
+              firstName: s.firstName,
+              lastName: s.lastName,
+              name: s.name,
+              section: s.section,
+              strand: s.strand,
+              gender: s.gender,
+              dob: s.dob,
+              parentName: s.parentName,
+              parentContact: s.parentContact,
+              address: s.address,
+              q1: computedGrade !== null ? computedGrade : null,
+              q2: computedGrade !== null ? computedGrade : null,
+              q3: computedGrade !== null ? computedGrade : null,
+              q4: computedGrade !== null ? computedGrade : null,
+              absences: Number(s.absences || 0),
+              attendanceRate: Number(s.attendance_rate || 100),
+              riskLevel: s.riskLevel,
+              riskLabel: s.riskLabel,
+              riskReasons: s.riskReasons,
+              computedGrade: s.computedGrade,
+              mlPredictedRisk: s.mlPredictedRisk,
+              mlPredictedLabel: s.mlPredictedRisk,
+              isMLModel: s.isMLModel,
+            };
+          })
+        : (BINHS_DATA.students || []).map(s => ({
+            q1: dashboardWeightedGrade(s, assessments, assessmentScores),
+            q2: dashboardWeightedGrade(s, assessments, assessmentScores),
+            q3: dashboardWeightedGrade(s, assessments, assessmentScores),
+            q4: dashboardWeightedGrade(s, assessments, assessmentScores),
+            currentAverage: dashboardWeightedGrade(s, assessments, assessmentScores),
+            averageGrade: dashboardWeightedGrade(s, assessments, assessmentScores),
+          }));
+
+      // Load attendance rate from backend
+      let attendanceRate = null;
+      let attendanceRateCount = 0;
+      if (session?.token && typeof fetch !== 'undefined') {
+        try {
+          const subject = Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0] ? BINHS_DATA.subjects[0] : 'General Mathematics';
+          // Query ALL attendance records for the section (subject filter removed because
+          // attendance records may be stored under a different subject label than BINHS_DATA.subjects)
+          const attUrl = `${window.location.origin}/api/attendance?section=${encodeURIComponent(sections?.[0]||'')}`;
+          const attRes = await fetch(attUrl, {
+            headers: { Authorization: `Bearer ${session.token}` }
+          });
+          if (attRes.ok) {
+            const attResult = await attRes.json();
+            if (attResult.success && Array.isArray(attResult.attendance)) {
+              const recordedStudents = attResult.attendance.length;
+              if (recordedStudents > 0) {
+                const presentCount = attResult.attendance.filter(r => r.status === 'Present').length;
+                attendanceRate = (presentCount / recordedStudents) * 100;
+                attendanceRateCount = recordedStudents;
+              }
+            }
+          }
+        } catch (e) {
+          console.info('[Dashboard] Could not load attendance:', e.message);
+          }
+        }
+
+      // Use API data with ML predictions as primary, fall back to local BINHS_DATA
+      if (apiStudents.length > 0) {
+        dataSource = 'api';
+        console.log(`[Dashboard] Data source: API (${apiStudents.length} students)`);
+       } else {
+         dataSource = 'none';
+         BINHS_DATA.students = [];
+         console.info('[Dashboard] Student API unavailable; stale local data cleared.');
+       }
+
+      // Compute metrics using backend-computed riskLevel when available (API path),
+      // falling back to AnalyticsEngine.evaluateStudent for local data.
+      const currentTerm = BINHS_DATA?.currentTerm || 1;
+      const total = students.length;
+      let atRisk = 0, moderate = 0, low = 0, insufficient = 0;
+      let gradeSum = 0, gradeCount = 0;
+      students.forEach(s => {
+        let evalObj;
+        // Prefer authoritative backend classification when available.
+        const backendLevel = s.riskLevel;
+        const isInsufficient = backendLevel === 'INSUFFICIENT_DATA' || backendLevel === 'INSUFFICIENT DATA';
+        if (backendLevel) {
+          evalObj = { level: isInsufficient ? 'INSUFFICIENT_DATA' : (backendLevel === 'HIGH' || backendLevel === 'AT-RISK' ? 'HIGH' : (backendLevel === 'MODERATE' ? 'MODERATE' : 'LOW')), label: s.riskLabel || backendLevel, badgeClass: backendLevel === 'INSUFFICIENT_DATA' ? 'muted' : (backendLevel === 'HIGH' ? 'danger' : (backendLevel === 'MODERATE' ? 'warning' : 'success')), reasons: s.riskReasons || [] };
+        } else {
+          const computedGrade = s.q1 === null || s.q1 === undefined ? null : Number(s.q1);
+          const evalStudent = {
+            q1: dashboardWeightedGrade(s, assessments, assessmentScores),
+            q2: dashboardWeightedGrade(s, assessments, assessmentScores),
+            q3: dashboardWeightedGrade(s, assessments, assessmentScores),
+            q4: dashboardWeightedGrade(s, assessments, assessmentScores),
+            currentAverage: computedGrade,
+            averageGrade: computedGrade,
+          };
+          evalObj = AnalyticsEngine.evaluateStudent(evalStudent);
+        }
+
+        if (evalObj.level === 'HIGH') atRisk++;
+        else if (evalObj.level === 'MODERATE') moderate++;
+        else if (evalObj.level === 'INSUFFICIENT_DATA') insufficient++;
+        else low++;
+
+        // Only include valid completed grades (backend computedGrade) in class average
+        const g = (s.computedGrade !== null && s.computedGrade !== undefined) ? Number(s.computedGrade) : null;
+        if (g !== null && Number.isFinite(g) && !isInsufficient) {
+          gradeSum += g;
+          gradeCount++;
+        }
+      });
+      const metrics = {
+        total,
+        atRisk,
+        moderate,
+        low,
+        insufficient,
+        insufficientPercentage: total > 0 ? ((insufficient / total) * 100).toFixed(1) : 0,
+        attendanceRate: attendanceRate,
+        averageGrade: gradeCount > 0 ? (gradeSum / gradeCount) : null,
+        atRiskPercentage: total > 0 ? ((atRisk / total) * 100).toFixed(1) : 0,
+        moderatePercentage: total > 0 ? ((moderate / total) * 100).toFixed(1) : 0,
+        lowPercentage: total > 0 ? ((low / total) * 100).toFixed(1) : 0,
+      };
+
+      document.getElementById('statTotalStudents').textContent = metrics.total;
+      document.getElementById('statAtRiskStudents').textContent = metrics.atRisk;
+      document.getElementById('statAttendanceRate').textContent = attendanceRate !== null ? `${attendanceRate.toFixed(1)}%` : '—';
+      document.getElementById('statAverageGrade').textContent = metrics.averageGrade === null ? 'N/A' : metrics.averageGrade.toFixed(1);
+      document.getElementById('donutTotalCount').textContent = metrics.total;
+      document.getElementById('legendNotRisk').textContent = `${metrics.low} (${metrics.lowPercentage}%)`;
+      document.getElementById('legendModerate').textContent = `${metrics.moderate} (${metrics.moderatePercentage}%)`;
+      document.getElementById('legendAtRisk').textContent = `${metrics.atRisk} (${metrics.atRiskPercentage}%)`;
+      document.getElementById('legendInsufficient').textContent = `${metrics.insufficient} (${metrics.insufficientPercentage}%)`;
+
+      // Auto-update banner section from actual student data
+      const bannerSectionEl = document.getElementById('bannerSectionTitle');
+      if (bannerSectionEl && students.length > 0) {
+        const sections = [...new Set(students.map(s => s.section).filter(Boolean))];
+        if (sections.length === 1) {
+          bannerSectionEl.textContent = sections[0];
+        } else if (sections.length > 1) {
+          bannerSectionEl.textContent = sections.join(', ');
+        }
+      }
+
+       const _subj = (function(){ try { return localStorage.getItem('binhs_selected_subject'); } catch(e){ return null; } })() || (Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0]) || 'General Mathematics';
+       const termAverages = ['Term 1', 'Term 2', 'Term 3'].map(term => {
+         const termAssessments = assessments.filter(a => a.quarter === term);
+         if (!termAssessments.length) return null;
+         let sum = 0, count = 0;
+         students.forEach(s => {
+           const g = dashboardWeightedGrade(s, termAssessments, assessmentScores, Number(term.replace(/\D/g, '')));
+           if (g !== null) { sum += g; count++; }
+         });
+         return count > 0 ? sum / count : null;
+       });
+       const q1Avg = termAverages[0];
+       const subtitleEl = document.getElementById('academicChartSubtitle');
+       if (subtitleEl) subtitleEl.textContent = _subj + ' — Average student grade by term';
+       const quarterlyData = termAverages;
+       setTimeout(() => {
+         AnalyticsEngine.renderAcademicChart('academicPerformanceChart', quarterlyData);
+         AnalyticsEngine.renderDonutChart('riskDonutChart', metrics);
+       }, 50);
+
+      // At-Risk Table (using backend riskLevel when available, else evaluateStudent)
+      const atRiskStudents = students.filter(s => {
+        if (s.riskLevel) return s.riskLevel === 'HIGH';
+        const computedGrade = s.q1 === null || s.q1 === undefined ? null : Number(s.q1);
+          const evalStudent = {
+            q1: computedGrade, q2: computedGrade, q3: computedGrade, q4: computedGrade,
+            currentAverage: computedGrade, averageGrade: computedGrade
+          };
+        return AnalyticsEngine.evaluateStudent(evalStudent).level === 'HIGH';
+      });
+      const tbody = document.getElementById('dashboardAtRiskTableBody');
+      tbody.innerHTML = '';
+      if (atRiskStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#64748B;">No at-risk students for the selected scope.</td></tr>';
+      }
+      atRiskStudents.forEach((student, index) => {
+        const computedGrade = student.q1 === null || student.q1 === undefined ? null : Number(student.q1);
+        const grade = computedGrade !== null ? computedGrade.toFixed(1) : '--';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:#64748B;font-weight:600;">${index + 1}</td>
+          <td>
+            <div class="student-cell">
+              <div class="table-avatar">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+              <span class="student-name-text">${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</span>
+            </div>
+          </td>
+          <td class="font-mono" style="color:#475569;">${escapeHtml(student.lrn)}</td>
+          <td class="${computedGrade !== null && computedGrade < 75 ? 'val-danger' : ''}">${grade}</td>
+          <td class="${student.absences >= 3 ? 'val-danger' : 'val-warning'}">${student.absences}</td>
+          <td><span class="badge-pill danger">AT-RISK</span></td>
+          <td style="font-size:12.5px;color:#475569;line-height:1.4;">${(student.riskReasons || student.mlReasons || ['Academic risk detected by model']).map(escapeHtml).join('<br>')}</td>
+          <td class="text-right">
+            <button class="btn-table-action btn-view-student" data-lrn="${escapeHtml(student.lrn)}">View</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.btn-view-student').forEach(btn => {
+        btn.onclick = () => openStudentDetailModal(btn.dataset.lrn);
+      });
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+       await loadAcademicTermDates();
+       await renderDashboard();
+
+      const subjSelect = document.getElementById('subjectFilterSelect');
+      if (subjSelect) {
+        subjSelect.addEventListener('change', () => {
+          try { localStorage.setItem('binhs_selected_subject', subjSelect.value); } catch (e) {}
+          renderDashboard();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
