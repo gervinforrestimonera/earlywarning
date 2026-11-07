@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | Admin Dashboard - Early Warning System</title>
+  <meta name="description" content="Biñan Integrated National High School - Administrator Dashboard for system-wide monitoring, teacher management, and early warning oversight.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/data-secure.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/grade-calc.js"></script>
+  <style>
+    /* ======== ADMIN DASHBOARD SPECIFIC STYLES ======== */
+
+    /* Activity Feed */
+    .activity-feed { display: flex; flex-direction: column; gap: 0; }
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 13px 0; border-bottom: 1px solid var(--border-light);
+      transition: background var(--transition-fast);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon {
+      width: 34px; height: 34px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 16px;
+    }
+    .activity-icon.green { background: #DCFCE7; color: #15803D; }
+    .activity-icon.blue { background: #DBEAFE; color: #1D4ED8; }
+    .activity-icon.red { background: #FEE2E2; color: #DC2626; }
+    .activity-icon.amber { background: #FEF3C7; color: #D97706; }
+    .activity-icon.purple { background: #F3E8FF; color: #7C3AED; }
+    .activity-icon svg { width: 17px; height: 17px; }
+    .activity-content { flex: 1; min-width: 0; }
+    .activity-title { font-size: 12.5px; font-weight: 700; color: var(--text-main); }
+    .activity-desc { font-size: 11.5px; color: var(--text-secondary); margin-top: 1px; }
+    .activity-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+
+    /* Two-Column Layout for Activity + Tables */
+    .admin-split-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 18px; margin-bottom: 20px;
+    }
+    .admin-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .admin-card-header {
+      padding: 16px 20px; display: flex;
+      align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .admin-card-body { padding: 4px 20px 16px; }
+
+    /* Mini Tables */
+    .admin-mini-table { width: 100%; border-collapse: collapse; }
+    .admin-mini-table th {
+      background: #F8FAFC; color: var(--text-muted);
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color); text-align: left;
+    }
+    .admin-mini-table td {
+      padding: 11px 14px; font-size: 12.5px; color: var(--text-main);
+      border-bottom: 1px solid var(--border-light); vertical-align: middle;
+    }
+    .admin-mini-table tbody tr:hover { background: #F8FAFC; }
+    .admin-mini-table tbody tr:last-child td { border-bottom: none; }
+    .admin-mini-table .user-cell { display: flex; align-items: center; gap: 8px; }
+    .admin-mini-table .user-mini-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .admin-mini-table .user-mini-avatar.green-bg { background: #15803D; }
+    .admin-mini-table .user-mini-avatar.blue-bg { background: #1D4ED8; }
+    .admin-mini-table .user-mini-avatar.amber-bg { background: #D97706; }
+    .admin-mini-table .user-mini-avatar.red-bg { background: #DC2626; }
+    .admin-mini-table .user-mini-avatar.purple-bg { background: #7C3AED; }
+
+    /* Badge for delivery status */
+    .delivery-badge {
+      display: inline-flex; align-items: center; padding: 3px 8px;
+      border-radius: var(--radius-full); font-size: 10.5px; font-weight: 700;
+    }
+    .delivery-badge.delivered { background: #DCFCE7; color: #15803D; }
+    .delivery-badge.pending { background: #FEF3C7; color: #B45309; }
+    .delivery-badge.failed { background: #FEE2E2; color: #DC2626; }
+
+    /* Admin Account Settings nav icon */
+    .nav-item .settings-icon { width: 18px; height: 18px; }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .admin-split-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Guard: Admin Only -->
+  <script>
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+    else if (_user.role !== 'Admin') window.location.href = 'dashboard.html';
+  </script>
+
+  <div class="app-layout">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar"></aside>
+    <script src="js/admin-sidebar.js"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-wrapper">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Overview of system activity and monitoring</p>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <!-- Notifications -->
+          <div class="notification-wrapper">
+            <button class="icon-btn" id="btnNotifications" title="System Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="badge-count" id="notificationBadge" hidden>0</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="dropdown-header">
+                <strong>System Notifications</strong>
+                <span class="badge-pill" id="notifBadgePill">0</span>
+              </div>
+              <div class="dropdown-list" id="notificationDropdownList">
+              </div>
+            </div>
+          </div>
+
+          <!-- User Menu -->
+          <div class="user-menu-wrapper">
+            <button class="top-user-pill" id="btnTopUserMenu" type="button" aria-expanded="false" aria-label="User profile menu">
+              <div class="top-user-avatar-wrapper">
+                <div class="top-user-avatar" id="topUserAvatar">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <span class="top-user-status-dot" title="Online"></span>
+              </div>
+              <div class="top-user-details">
+                <span class="top-user-name" id="topUserName">Administrator</span>
+                <span class="top-user-role" id="topUserRole">Administrator</span>
+              </div>
+              <svg class="top-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="user-dropdown-menu" id="userProfileDropdown">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-avatar">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <div class="user-dropdown-info">
+                  <strong class="user-dropdown-name" id="dropdownUserName">Administrator</strong>
+                  <span class="user-dropdown-role" id="dropdownUserRole">System Administrator</span>
+                  <span class="user-dropdown-badge">BINHS Admin</span>
+                </div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <div class="user-dropdown-actions">
+                <div class="user-dropdown-divider"></div>
+                <button class="user-dropdown-item logout-item" id="topBtnLogout" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <div class="content-container">
+        <!-- Section Banner -->
+        <div class="section-banner">
+          <div class="banner-left">
+            <div class="banner-icon-box">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+              </svg>
+            </div>
+            <div class="banner-meta">
+              <h2 class="banner-title" id="bannerSchoolTitle">Biñan Integrated National High School</h2>
+              <span class="banner-sub" id="bannerAcademicYear">School Year 2026 – 2027</span>
+            </div>
+          </div>
+          <div class="banner-right">
+            <div class="banner-calendar-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="banner-date-text">
+              <div class="date-main" id="liveDateString"></div>
+              <div class="date-sub" id="liveDayString"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Admin Stat Metric Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box blue">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+              </div>
+              <div class="metric-label">TOTAL STUDENTS</div>
+            </div>
+            <div class="metric-value" id="statTotalStudents">--</div>
+            <div class="metric-footnote">Enrolled students in the system</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box green">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+              <div class="metric-label">TEACHER ACCOUNTS</div>
+            </div>
+            <div class="metric-value" id="statTeacherAccounts">—</div>
+            <div class="metric-footnote">Active teacher accounts</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box red">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/>
+                </svg>
+              </div>
+              <div class="metric-label">AT-RISK STUDENTS</div>
+            </div>
+            <div class="metric-value danger" id="statAtRiskStudents">--</div>
+            <div class="metric-footnote">Students flagged by the system</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box amber">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                </svg>
+              </div>
+              <div class="metric-label">SMS NOTIFICATIONS SENT</div>
+            </div>
+            <div class="metric-value" id="statSmsSent">--</div>
+            <div class="metric-footnote">Total parent notifications</div>
+          </div>
+        </div>
+
+        <!-- Charts Row: At-Risk Overview + System Activity -->
+        <div class="charts-row">
+          <!-- At-Risk Student Overview Chart -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <h3 class="chart-title">At-Risk Student Overview</h3>
+                <p class="chart-subtitle">Number of at-risk students per quarter</p>
+              </div>
+            </div>
+            <div class="chart-canvas-container">
+              <div id="chartEmptyMessage" style="display:none; text-align:center; color:var(--text-muted); padding:40px;">No quarterly assessment data available.</div>
+              <canvas id="atRiskQuarterlyChart"></canvas>
+            </div>
+          </div>
+
+          <!-- System Activity -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <h3 class="chart-title">System Activity</h3>
+                <p class="chart-subtitle">Latest activities and system events</p>
+              </div>
+              <a href="admin-system-logs.html" class="link-btn">
+                View All Logs
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </div>
+            <div class="activity-feed" id="systemActivityFeed">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Split: Recent SMS + Recent System Logs -->
+        <div class="admin-split-row">
+          <!-- Recent SMS Notifications -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="table-title">Recent SMS Notifications</h3>
+                <p class="table-subtitle">Latest parent/guardian notifications</p>
+              </div>
+              <a href="sms-logs.html" class="link-btn">
+                View All SMS Notifications
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-mini-table" id="recentSmsTable">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Parent/Guardian Contact</th>
+                    <th>Date Sent</th>
+                    <th>Delivery Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recentSmsBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Recent System Logs -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="table-title">Recent System Logs</h3>
+                <p class="table-subtitle">Latest system activities and account actions</p>
+              </div>
+              <a href="admin-system-logs.html" class="link-btn">
+                View All System Logs
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-mini-table" id="recentLogsTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Activity</th>
+                    <th>Date & Time</th>
+                  </tr>
+                </thead>
+                <tbody id="recentLogsBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+  </div>
+</div>
+</div>
+<script>
+    // ==================== AUTH & USER SETUP ====================
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null') || { name: 'Administrator', role: 'Admin' };
+    let usersApiLoaded = false;
+
+    // Populate user info
+    ['sidebarUserName','topUserName','dropdownUserName'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = currentUser.name;
+    });
+    ['sidebarUserRole','topUserRole','dropdownUserRole'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = 'System Administrator';
+    });
+
+    // ==================== LIVE CLOCK ====================
+    function updateClock() {
+      const now = new Date();
+      const dateEl = document.getElementById('liveDateString');
+      const dayEl = document.getElementById('liveDayString');
+      if (dateEl) dateEl.textContent = 'Today is ' + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      if (dayEl) dayEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+    updateClock();
+    setInterval(updateClock, 60000);
+
+    // ==================== MOBILE SIDEBAR ====================
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    if (mobileBtn) mobileBtn.onclick = () => sidebar.classList.toggle('open');
+    document.addEventListener('click', e => {
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== mobileBtn) {
+        sidebar.classList.remove('open');
+      }
+    });
+
+    // ==================== NOTIFICATIONS (shared module) ====================
+    BINHS_Notifications.init({
+      bellBtnId: 'btnNotifications',
+      dropdownId: 'notificationDropdown',
+      badgeId: 'notificationBadge',
+      badgePillId: 'notifBadgePill',
+      listId: 'notificationDropdownList',
+      onNotificationClick: (logId, notification) => {
+        BINHS_Notifications.markAsRead(logId);
+        window.location.href = 'academic-records.html';
+      }
+    });
+
+    // ==================== API HELPERS ====================
+    // API_BASE_URL is declared in js/data-secure.js (loaded above); reuse it here.
+    async function fetchApi(endpoint) {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token) return null;
+      try {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        console.info('[Dashboard] API fetch failed:', endpoint, e.message);
+        return null;
+      }
+    }
+
+    async function loadDashboardData() {
+      // Fetch users (teacher count)
+      const usersResp = await fetchApi('/api/users');
+      if (usersResp?.success && Array.isArray(usersResp.users)) {
+        BINHS_DATA.users = usersResp.users;
+        usersApiLoaded = true;
+      }
+
+      // Fetch students
+      const studentsResp = await fetchApi('/api/students');
+      if (studentsResp?.success && Array.isArray(studentsResp.students)) {
+        BINHS_DATA.students = studentsResp.students;
+      }
+
+      // Fetch SMS logs (for SMS count and recent SMS table)
+      const smsResp = await fetchApi('/api/sms/logs');
+      if (smsResp?.success && Array.isArray(smsResp.logs)) {
+        BINHS_DATA.notificationLogs = smsResp.logs;
+      }
+
+      // Fetch system logs
+      const logsResp = await fetchApi('/api/system/logs');
+      if (logsResp?.success && Array.isArray(logsResp.logs)) {
+        BINHS_DATA.systemLogs = logsResp.logs;
+      }
+
+      // Re-render all data-dependent sections
+      renderMetrics();
+      renderAtRiskChart();
+      renderSystemActivity();
+      renderRecentSms();
+      renderRecentLogs();
+    }
+
+    // ==================== USER DROPDOWN ====================
+    const userBtn = document.getElementById('btnTopUserMenu');
+    const userDropdown = document.getElementById('userProfileDropdown');
+    if (userBtn && userDropdown) {
+      userBtn.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle('active'); };
+      document.addEventListener('click', (e) => { if (!userDropdown.contains(e.target)) userDropdown.classList.remove('active'); });
+    }
+
+    // ==================== LOGOUT ====================
+    function doLogout() {
+      sessionStorage.removeItem('binhs_user');
+      window.location.href = 'index.html';
+    }
+    document.getElementById('btnLogout')?.addEventListener('click', doLogout);
+    document.getElementById('topBtnLogout')?.addEventListener('click', doLogout);
+
+    // ==================== FORMAT DATE HELPER ====================
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
+             date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    function escapeHtml(text) {
+      if (text == null) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    // ==================== AT-RISK QUARTERLY CHART ====================
+    async function fetchAssessments() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token) return [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/assessments`, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return [];
+        const payload = await res.json();
+        return payload.success && Array.isArray(payload.assessments) ? payload.assessments : [];
+      } catch (e) {
+        console.info('[Dashboard] Failed to fetch assessments:', e.message);
+        return [];
+      }
+    }
+
+    async function fetchAssessmentScores(assessmentId) {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token) return [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/assessments/${assessmentId}/scores`, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return [];
+        const payload = await res.json();
+        return payload.success && Array.isArray(payload.scores) ? payload.scores : [];
+      } catch (e) {
+        console.info('[Dashboard] Failed to fetch assessment scores:', e.message);
+        return [];
+      }
+    }
+
+    let isRenderingChart = false;
+
+    async function renderAtRiskChart() {
+      if (isRenderingChart) return;
+      isRenderingChart = true;
+      const ctxElement = document.getElementById('atRiskQuarterlyChart');
+      if (!ctxElement) {
+        isRenderingChart = false;
+        return;
+      }
+      const existingChart = Chart.getChart(ctxElement);
+      if (existingChart) {
+        existingChart.destroy();
+      }
+      const ctx = ctxElement.getContext('2d');
+
+      // Fetch assessments to determine which quarters have actual data
+      const assessments = await fetchAssessments();
+      const quartersWithData = new Set();
+      const assessmentMap = {}; // assessment_id -> assessment
+       assessments.forEach(a => {
+         const quarter = String(a.quarter || '').match(/(\d+)/) ? 'Term ' + String(a.quarter).match(/(\d+)/)[1] : a.quarter;
+         quartersWithData.add(quarter);
+         assessmentMap[a.id] = { ...a, quarter };
+       });
+
+      // Fetch scores for all assessments
+      const allScores = [];
+      for (const a of assessments) {
+        const scores = await fetchAssessmentScores(a.id);
+        scores.forEach(s => allScores.push({ assessmentId: a.id, quarter: a.quarter, ...s }));
+      }
+
+      // Build score map: lrn -> { assessment_id -> score }
+      const scoreMap = {};
+      allScores.forEach(s => {
+        if (!scoreMap[s.lrn]) scoreMap[s.lrn] = {};
+        scoreMap[s.lrn][s.assessmentId] = Number(s.score);
+      });
+
+      const students = BINHS_DATA.students || [];
+
+      function countAtRiskForQuarter(students, quarter, scoresByAssessment) {
+        return students.filter(s => {
+          const quarterAssessments = Object.values(assessmentMap).filter(
+            a => a.quarter === quarter
+          );
+          const result = GradeCalc.calculateQuarterlyGrade(
+            quarterAssessments,
+            quarter,
+            'General Mathematics',
+            scoresByAssessment[s.lrn] || {}
+          );
+
+          if (result.finalGrade === null) {
+            return false; // No data for this quarter
+          }
+
+          const absences = Number(s.absences || 0);
+          return result.finalGrade < 75 || absences >= 3;
+        }).length;
+      }
+
+       const quarterLabels = [];
+       const quarterData = [];
+
+       ['Term 1', 'Term 2', 'Term 3'].forEach(q => {
+         if (quartersWithData.has(q)) {
+           quarterLabels.push(q);
+           quarterData.push(countAtRiskForQuarter(students, q, scoreMap));
+         }
+       });
+
+      if (quarterLabels.length === 0) {
+        ctxElement.style.display = 'none';
+        const emptyMsg = document.getElementById('chartEmptyMessage');
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        isRenderingChart = false;
+        return;
+      }
+
+      ctxElement.style.display = 'block';
+      const emptyMsg = document.getElementById('chartEmptyMessage');
+      if (emptyMsg) emptyMsg.style.display = 'none';
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: quarterLabels,
+          datasets: [{
+            label: 'At-Risk Students',
+            data: quarterData,
+            backgroundColor: [
+              'rgba(21, 128, 61, 0.85)',
+              'rgba(21, 128, 61, 0.85)',
+              'rgba(21, 128, 61, 0.85)',
+              'rgba(21, 128, 61, 0.85)'
+            ],
+            borderRadius: 8,
+            borderSkipped: false,
+            barPercentage: 0.55,
+            categoryPercentage: 0.7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F172A',
+              titleFont: { family: "'Plus Jakarta Sans'", weight: '700' },
+              bodyFont: { family: "'Plus Jakarta Sans'" },
+              padding: 10,
+              borderRadius: 8,
+              callbacks: {
+                label: function(context) {
+                  return `${context.parsed.y} students`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                stepSize: 20,
+                font: { family: "'Plus Jakarta Sans'", size: 11, weight: '600' },
+                color: '#94A3B8'
+              },
+              grid: { color: '#F1F5F9', drawBorder: false }
+            },
+            x: {
+              ticks: {
+                font: { family: "'Plus Jakarta Sans'", size: 12, weight: '700' },
+                color: '#475569'
+              },
+              grid: { display: false }
+            }
+          }
+        },
+        plugins: [{
+          afterDraw: function(chart) {
+            const ctx = chart.ctx;
+            chart.data.datasets.forEach(function(dataset, i) {
+              const meta = chart.getDatasetMeta(i);
+              meta.data.forEach(function(bar, index) {
+                const data = dataset.data[index];
+                ctx.fillStyle = '#0F172A';
+                ctx.font = "bold 12px 'Plus Jakarta Sans'";
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(data, bar.x, bar.y - 6);
+      });
+            });
+          }
+        }]
+      });
+    isRenderingChart = false;
+    }
+
+    // ==================== SYSTEM ACTIVITY FEED ====================
+    function activityIcon(action) {
+      const a = (action || '').toLowerCase();
+      if (a.includes('login') && !a.includes('failed') && !a.includes('invalid')) {
+        return { icon: 'green', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>', label: 'Authentication' };
+      }
+      if (a.includes('failed login') || a.includes('failed sign') || a.includes('invalid') || a.includes('unauthorized')) {
+        return { icon: 'red', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><path d="M8.21 14.89a7 7 0 0 1-3.62-3.61l-2.11 2.12a8 8 0 0 0 4.89 4.89l2.11-2.12a7 7 0 0 0-3.62-3.61zM22 12c0-4.97-4.03-9-9-9s-9 4.03-9 9c0 2.48.99 4.75 2.6 6.44l1.13-1.13a2 2 0 0 1 2.83-2.82l-2.11-2.12a1 1 0 0 0-1.41 0l-2.11 2.11a1 1 0 0 0 0 1.41l2.11 2.11a1 1 0 0 0 1.41 0l2.11-2.11a2 2 0 0 1 2.82-2.82l2.11 2.11a7 7 0 0 0 4.89-4.89l2.11 2.12a7 7 0 0 0 3.62-3.62z"/></svg>', label: 'Security' };
+      }
+      if (a.includes('create') || a.includes('update') || a.includes('modify') || a.includes('register') || a.includes('edit')) {
+        return { icon: 'blue', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', label: 'Management' };
+      }
+      if (a.includes('sms') || a.includes('notification') || a.includes('message') || a.includes('alert')) {
+        return { icon: 'amber', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>', label: 'Notifications' };
+      }
+      return { icon: 'purple', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>', label: 'General Activity' };
+    }
+
+    // ==================== SYSTEM ACTIVITY FEED ====================
+    function renderSystemActivity() {
+      const feed = document.getElementById('systemActivityFeed');
+      const logs = BINHS_DATA.systemLogs || [];
+
+      if (!logs.length) {
+        feed.innerHTML = `
+          <div class="activity-item">
+            <div class="activity-icon muted">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M5 18h14"/></svg>
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">No activity</div>
+              <div class="activity-desc">No system activity records available.</div>
+            </div>
+            <div class="activity-time">—</div>
+          </div>
+        `;
+        return;
+      }
+
+      const recent = logs.slice(0, 5);
+
+      feed.innerHTML = recent.map(log => {
+        const iconInfo = activityIcon(log.action || log.action_type || '');
+        return `
+          <div class="activity-item">
+            <div class="activity-icon ${iconInfo.icon}">${iconInfo.svg}</div>
+            <div class="activity-content">
+              <div class="activity-title">${escapeHtml(log.action || log.title || 'Activity')}</div>
+              <div class="activity-desc">${escapeHtml(log.category || iconInfo.label || '')}</div>
+            </div>
+            <div class="activity-time">${new Date(log.timestamp || log.date_sent).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== RECENT SMS TABLE ====================
+    function renderRecentSms() {
+      const tbody = document.getElementById('recentSmsBody');
+      const logs = BINHS_DATA.notificationLogs || [];
+      const recent = logs.slice(0, 5);
+
+      if (!recent.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">No SMS notifications sent yet.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = recent.map(sms => {
+        const statusClass = (sms.status || '').toLowerCase().includes('failed') ? 'failed' :
+                           (sms.status || '').toLowerCase().includes('delivered') ? 'delivered' : 'pending';
+        const studentName = escapeHtml(sms.student_name || 'Unknown student');
+        const contact = sms.parent_contact ? maskPhone(sms.parent_contact) : '—';
+        return `
+          <tr>
+            <td style="font-weight:600;">${studentName}</td>
+            <td style="color:var(--text-secondary); font-family: var(--font-mono); font-size: 12px;">${contact}</td>
+            <td style="color:var(--text-secondary); font-size: 12px;">${formatDate(new Date(sms.date_sent))}</td>
+            <td><span class="delivery-badge ${statusClass}">${statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function maskPhone(contact) {
+      if (!contact) return '—';
+      const digits = contact.replace(/\D/g, '');
+      if (digits.length < 4) return contact;
+      const last4 = digits.slice(-4);
+      return `•••• •••• ${last4}`;
+    }
+
+    // ==================== RECENT SYSTEM LOGS TABLE ====================
+    function renderRecentLogs() {
+      const tbody = document.getElementById('recentLogsBody');
+      const logs = BINHS_DATA.systemLogs || [];
+      const recent = logs.slice(0, 5);
+
+      if (!recent.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align:center; color:var(--text-muted); padding:20px;">No system activity records available.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      const colors = ['green-bg', 'blue-bg', 'amber-bg', 'red-bg', 'purple-bg'];
+      const colorMap = {
+        'green-bg': 'green', 'blue-bg': 'blue', 'amber-bg': 'amber',
+        'red-bg': 'red', 'purple-bg': 'purple'
+      };
+
+      tbody.innerHTML = recent.map(log => {
+        const userName = log.user_name || 'Unknown';
+        const colorClass = colors[Math.abs(userName.charCodeAt(0)) % colors.length];
+        const iconKey = colorMap[colorClass] || 'green';
+        return `
+          <tr>
+            <td>
+              <div class="user-cell" style="display:flex; align-items:center; gap:8px;">
+                <div class="user-mini-avatar ${colorClass}">${escapeHtml(log.user_name || 'U').charAt(0).toUpperCase()}</div>
+                <span style="font-weight:600;">${escapeHtml(log.user_name || 'Unknown')}</span>
+              </div>
+            </td>
+            <td style="color:var(--text-secondary); font-size: 12px;">${escapeHtml(log.action || log.title || 'Activity')}</td>
+            <td style="color:var(--text-secondary); font-size: 12px; white-space:nowrap;">${new Date(log.timestamp || log.date_sent).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==================== RENDER REAL METRICS ====================
+    function renderMetrics() {
+      const students = BINHS_DATA.students || [];
+      const users = BINHS_DATA.users || [];
+      const notificationLogs = BINHS_DATA.notificationLogs || [];
+
+      // Use students from students array; fall back to users if populated from /api/students
+      const allStudents = students.length > 0 ? students : users;
+
+      const totalStudents = allStudents.length;
+      const teacherAccounts = users.filter(u => u.role === 'Teacher' && u.status === 'Active').length;
+
+      // Count at-risk students: only those with real assessment data (not placeholder zeros)
+      const atRiskStudents = allStudents.filter(s => {
+        // If no computed grade (no assessment data), q-values are placeholders, not real grades
+        if (s.computedGrade === null) {
+          const hasRealGrade = [s.q1, s.q2, s.q3, s.q4].some(g => g !== null && g !== undefined && g !== 0);
+          if (!hasRealGrade) return false; // INSUFFICIENT_DATA, not AT-RISK
+        }
+        return AnalyticsEngine.evaluateStudent(s).level === 'HIGH';
+      }).length;
+
+      const smsSent = notificationLogs.filter(l => (l.status || '').toLowerCase().includes('delivered')).length;
+
+      const elTotal = document.getElementById('statTotalStudents');
+      const elTeachers = document.getElementById('statTeacherAccounts');
+      const elAtRisk = document.getElementById('statAtRiskStudents');
+      const elSms = document.getElementById('statSmsSent');
+
+      if (elTotal) elTotal.textContent = totalStudents.toLocaleString();
+      if (elTeachers) elTeachers.textContent = usersApiLoaded ? teacherAccounts.toLocaleString() : '—';
+      if (elAtRisk) elAtRisk.textContent = atRiskStudents.toLocaleString();
+      if (elSms) elSms.textContent = smsSent.toLocaleString();
+    }
+
+    // ==================== TOAST ====================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+      await loadDashboardData();
+    });
+
+    // Refresh metrics when backend data syncs
+    window.addEventListener('binhs_data_synced', () => {
+      loadDashboardData();
+    });
+
+</script>
+
+<!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | Account Settings - Early Warning System</title>
+  <meta name="description" content="Administrator account settings, security preferences, and SMS gateway configuration for the BINHS Early Warning System.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ===== Account Settings (Admin) page-specific styles ===== */
+    .settings-grid { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
+    @media (max-width: 1000px) { .settings-grid { grid-template-columns: 1fr; } }
+    .settings-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    .settings-card + .settings-card { margin-top: 18px; }
+    .settings-card-header { padding: 16px 20px; border-bottom: 1px solid var(--border-light); }
+    .settings-card-header h2 { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .settings-card-header p { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .settings-card-body { padding: 20px; }
+    .profile-hero { text-align: center; padding: 8px 0 4px; }
+    .profile-avatar-lg {
+      width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 12px;
+      background: linear-gradient(135deg, #16A34A, #15803D); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 800; box-shadow: 0 8px 20px rgba(22,163,74,.28);
+    }
+    .profile-hero h3 { font-size: 18px; font-weight: 800; color: var(--text-main); }
+    .profile-hero .prole { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
+    .profile-meta { margin-top: 16px; display: grid; gap: 10px; text-align: left; }
+    .profile-meta-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; background: #F8FAFC; border: 1px solid var(--border-light); border-radius: 9px;
+    }
+    .profile-meta-row small { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); }
+    .profile-meta-row strong { font-size: 13px; color: var(--text-main); }
+    .form-grid { display: grid; gap: 16px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 560px) { .form-row-2 { grid-template-columns: 1fr; } }
+    .sg-field { display: grid; gap: 6px; }
+    .sg-field label { font-size: 11.5px; font-weight: 700; letter-spacing: .2px; color: var(--text-muted); text-transform: uppercase; }
+    .sg-field input, .sg-field select {
+      padding: 10px 13px; border: 1px solid var(--border-color); border-radius: 9px;
+      font-size: 13.5px; font-family: inherit; color: var(--text-main); background: #fff;
+    }
+    .sg-field input:focus, .sg-field select:focus { outline: 0; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+    .sg-hint { font-size: 11.5px; color: var(--text-muted); }
+    .mode-toggle { display: flex; gap: 10px; }
+    .mode-option {
+      flex: 1; border: 1.5px solid var(--border-color); border-radius: 10px; padding: 12px;
+      cursor: pointer; text-align: center; transition: all var(--transition-fast);
+    }
+    .mode-option input { display: none; }
+    .mode-option .mt { font-size: 13px; font-weight: 800; color: var(--text-main); }
+    .mode-option .md { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .mode-option.selected { border-color: var(--primary); background: #F0FDF4; }
+    .mode-option.selected .mt { color: var(--primary); }
+    .danger-zone { border: 1px solid #FECACA; background: #FEF2F2; border-radius: 10px; padding: 14px 16px; }
+    .danger-zone h4 { font-size: 13px; font-weight: 800; color: #DC2626; }
+    .danger-zone p { font-size: 12px; color: #991B1B; margin: 4px 0 12px; }
+    .btn-danger-solid {
+      background: #DC2626; color: #fff; border: 0; padding: 9px 16px; border-radius: 9px;
+      font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .btn-danger-solid:hover { background: #B91C1C; }
+  </style>
+</head>
+<body>
+  <!-- Auth Guard: admin-only page -->
+  <script>
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+    else if (_user.role !== 'Admin') window.location.href = 'dashboard.html';
+  </script>
+
+  <div class="app-layout">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar"></aside>
+    <script src="js/admin-sidebar.js"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div>
+            <h1 class="page-title">Account Settings</h1>
+            <p class="page-subtitle"><a href="admin-dashboard.html">Dashboard</a> &rsaquo; Account Settings</p>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <div class="notification-wrapper">
+            <button class="icon-btn" id="btnNotifications" title="System Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="badge-count">2</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="dropdown-header">
+                <strong>System Notifications</strong>
+                <span class="badge-pill danger">2 New</span>
+              </div>
+              <div class="dropdown-list">
+                <div class="dropdown-item">
+                  <div class="dot warning"></div>
+                  <div>
+                    <div class="item-title">SMS gateway in simulation mode</div>
+                    <div class="item-desc">Switch to Live API to dispatch real messages</div>
+                    <span class="item-time">Just now</span>
+                  </div>
+                </div>
+                <div class="dropdown-item">
+                  <div class="dot success"></div>
+                  <div>
+                    <div class="item-title">Settings saved</div>
+                    <div class="item-desc">Your configuration is up to date</div>
+                    <span class="item-time">1 hour ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="user-menu-wrapper">
+            <button class="top-user-pill" id="btnTopUserMenu" type="button">
+              <div class="top-user-avatar-wrapper">
+                <div class="top-user-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <span class="top-user-status-dot"></span>
+              </div>
+              <div class="top-user-details">
+                <span class="top-user-name" id="topUserName">Gervin Forres N. Timonera</span>
+                <span class="top-user-role" id="topUserRole">System Administrator</span>
+              </div>
+              <svg class="top-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="user-dropdown-menu" id="userProfileDropdown">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <div class="user-dropdown-info">
+                  <strong class="user-dropdown-name" id="dropdownUserName">Gervin Forres N. Timonera</strong>
+                  <span class="user-dropdown-role" id="dropdownUserRole">System Administrator</span>
+                </div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <div class="user-dropdown-actions">
+                <button class="user-dropdown-item logout-item" id="topBtnLogout" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-container">
+        <div class="settings-grid">
+          <!-- ========== LEFT: PROFILE CARD ========== -->
+          <div>
+            <div class="settings-card">
+              <div class="settings-card-body">
+                <div class="profile-hero">
+                  <div class="profile-avatar-lg" id="profileInitials">GT</div>
+                  <h3 id="profileName">Gervin Forres N. Timonera</h3>
+                  <p class="prole">System Administrator</p>
+                </div>
+                <div class="profile-meta">
+                  <div class="profile-meta-row"><small>Username</small><strong id="profileUsername">gtimonera</strong></div>
+                  <div class="profile-meta-row"><small>Role</small><strong>Administrator</strong></div>
+                  <div class="profile-meta-row"><small>School</small><strong>BINHS</strong></div>
+                  <div class="profile-meta-row"><small>School Year</small><strong>2026 - 2027</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- ========== RIGHT: SETTINGS PANELS ========== -->
+          <div>
+            <!-- Profile Information -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h2>Profile Information</h2>
+                <p>Update your administrator display name and contact details.</p>
+              </div>
+              <div class="settings-card-body">
+                <form class="form-grid" id="profileForm" onsubmit="event.preventDefault(); saveProfile();">
+                  <div class="form-row-2">
+                    <div class="sg-field"><label for="setFullName">Full Name</label><input type="text" id="setFullName" placeholder="Gervin Forres N. Timonera"></div>
+                    <div class="sg-field"><label for="setEmail">Email Address</label><input type="email" id="setEmail" placeholder="admin@binhs.edu.ph"></div>
+                  </div>
+                  <div class="form-row-2">
+                    <div class="sg-field"><label for="setPhone">Contact Number</label><input type="text" id="setPhone" placeholder="09XX XXX XXXX"></div>
+                    <div class="sg-field"><label for="setPosition">Position / Title</label><input type="text" id="setPosition" placeholder="ICT Coordinator"></div>
+                  </div>
+                  <div style="display:flex; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-primary" id="btnSaveProfile">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                      <span>Save Changes</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h2>Change Password</h2>
+                <p>Use a strong password you do not use elsewhere.</p>
+              </div>
+              <div class="settings-card-body">
+                <form class="form-grid" id="passwordForm" onsubmit="event.preventDefault(); changePassword();">
+                  <div class="sg-field"><label for="currentPassword">Current Password</label><input type="password" id="currentPassword" placeholder="Enter current password" autocomplete="current-password"></div>
+                  <div class="form-row-2">
+                    <div class="sg-field"><label for="newPassword">New Password</label><input type="password" id="newPassword" placeholder="Minimum 6 characters" autocomplete="new-password"></div>
+                    <div class="sg-field"><label for="confirmPassword">Confirm New Password</label><input type="password" id="confirmPassword" placeholder="Re-enter new password" autocomplete="new-password"></div>
+                  </div>
+                  <div style="display:flex; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-primary" id="btnChangePassword">Update Password</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <!-- SMS Gateway Configuration -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h2>SMS Gateway Configuration</h2>
+                <p>Configure the TextBee SMS Gateway used for parent notifications.</p>
+              </div>
+              <div class="settings-card-body">
+                <form class="form-grid" id="gatewayForm" onsubmit="event.preventDefault(); saveGateway();">
+                  <div class="sg-field">
+                    <label>Gateway Mode</label>
+                    <div class="mode-toggle">
+                      <label class="mode-option" id="modeSimulation">
+                        <input type="radio" name="gwMode" value="simulation">
+                        <div class="mt">Simulation</div>
+                        <div class="md">No real SMS sent (safe for testing)</div>
+                      </label>
+                      <label class="mode-option" id="modeLive">
+                        <input type="radio" name="gwMode" value="live">
+                        <div class="mt">Live API</div>
+                        <div class="md">Dispatch real SMS via TextBee (Android phone)</div>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="sg-field">
+                    <label>TextBee API Key</label>
+                    <input type="text" id="gwApiKey" placeholder="Configured via .env (TEXTBEE_API_KEY)" autocomplete="off" readonly>
+                    <span class="sg-hint" id="gwApiKeyStatus"></span>
+                  </div>
+                  <div class="sg-field">
+                    <label>TextBee Device ID</label>
+                    <input type="text" id="gwDeviceId" placeholder="Configured via .env (TEXTBEE_DEVICE_ID)" autocomplete="off" readonly>
+                    <span class="sg-hint" id="gwDeviceIdStatus"></span>
+                  </div>
+                  <div class="sg-field">
+                    <label for="gwSenderName">Sender Name</label>
+                    <input type="text" id="gwSenderName" placeholder="BINHS_ALERT" maxlength="11">
+                  </div>
+                  <p class="sg-hint">Sender name is limited to 11 characters. In Simulation mode, messages are logged but not actually sent. API Key and Device ID are loaded from backend environment variables and cannot be changed here.</p>
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button type="button" class="btn btn-secondary" id="btnTestSms">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      <span>Send Test SMS</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveGateway">Save Configuration</button>
+                    <div style="font-size:12px; color:#64748B; margin-top:8px;">Changes to SMS gateway settings must be saved separately.</div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+             <!-- Danger Zone -->
+             <div class="settings-card">
+               <div class="settings-card-header">
+                 <h2>Clear Academic Data</h2>
+                 <p>Deletes assessments, assessment scores, attendance records, system logs, and notification logs. Preserves students, accounts, settings, SMS configuration, and Decision Tree models.</p>
+               </div>
+               <div class="settings-card-body">
+                 <div class="danger-zone">
+                   <button type="button" class="btn-danger-solid" id="btnClearAcademicData">Clear Academic Data</button>
+                   <p style="font-size:12px; color:#64748B; margin-top:8px;">Deletes assessments, assessment scores, attendance records, system logs, and notification logs. Preserves students, accounts, settings, SMS configuration, and Decision Tree models.</p>
+                 </div>
+               </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/data-secure.js"></script>
+  <script src="js/sms.js"></script>
+  <script>
+    // ===== AUTH & USER =====
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null') || { name: 'Gervin Forres N. Timonera', username: 'gtimonera', role: 'Admin' };
+    const roleTitle = currentUser.role === 'Admin' ? 'System Administrator' : 'Teacher / Advisor';
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    ['sidebarUserName', 'topUserName', 'dropdownUserName'].forEach(id => setText(id, currentUser.name));
+    ['sidebarUserRole', 'topUserRole', 'dropdownUserRole'].forEach(id => setText(id, roleTitle));
+    const assignedSections = Array.isArray(currentUser.sections) ? currentUser.sections.filter(Boolean) : [];
+    setText('sidebarUserSection', currentUser.role === 'Admin' ? 'All SHS Sections' : (assignedSections.length ? `${assignedSections.join(', ')} Adviser` : 'No section assigned'));
+
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>'\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+    const initials = (name) => name.trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+    // Profile hero from session
+    setText('profileInitials', initials(currentUser.name || 'Admin'));
+    setText('profileName', currentUser.name);
+    setText('profileUsername', currentUser.username || 'admin');
+
+    // ===== SIDEBAR / DROPDOWN / LOGOUT =====
+    document.getElementById('mobileMenuBtn').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+    const userBtn = document.getElementById('btnTopUserMenu');
+    const userDropdown = document.getElementById('userProfileDropdown');
+    userBtn.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle('active'); };
+    document.addEventListener('click', () => userDropdown.classList.remove('active'));
+    function doLogout() { sessionStorage.removeItem('binhs_user'); window.location.href = 'index.html'; }
+    document.getElementById('btnLogout').onclick = doLogout;
+    document.getElementById('topBtnLogout').onclick = doLogout;
+
+    // ===== NOTIFICATIONS DROPDOWN =====
+    const notifBtn = document.getElementById('btnNotifications');
+    const notifDropdown = document.getElementById('notificationDropdown');
+    if (notifBtn && notifDropdown) {
+      notifBtn.onclick = (e) => { e.stopPropagation(); notifDropdown.classList.toggle('active'); };
+      document.addEventListener('click', (e) => { if (!notifDropdown.contains(e.target)) notifDropdown.classList.remove('active'); });
+    }
+
+    // ===== TOAST =====
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    // ===== PROFILE SETTINGS =====
+    document.getElementById('setFullName').value = currentUser.name || '';
+
+    async function saveProfile() {
+      const fullName = document.getElementById('setFullName').value.trim();
+      const email = document.getElementById('setEmail').value.trim();
+      const phone = document.getElementById('setPhone').value.trim();
+      const position = document.getElementById('setPosition').value.trim();
+      if (!fullName) { showToast('Full name cannot be empty.', 'danger'); return; }
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentUser.token}` },
+          body: JSON.stringify({ name: fullName, email, phone, roleTitle: position })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Could not save profile.');
+        currentUser.name = fullName;
+        sessionStorage.setItem('binhs_user', JSON.stringify(currentUser));
+        setText('profileInitials', initials(fullName));
+        setText('profileName', fullName);
+        ['sidebarUserName', 'topUserName', 'dropdownUserName'].forEach(id => setText(id, fullName));
+        showToast('Profile updated successfully.', 'success');
+      } catch (error) { showToast(error.message || 'Could not save profile.', 'danger'); }
+    }
+
+    // ===== CHANGE PASSWORD =====
+    async function changePassword() {
+      const cur = document.getElementById('currentPassword').value;
+      const np = document.getElementById('newPassword').value;
+      const cp = document.getElementById('confirmPassword').value;
+      if (!cur) { showToast('Enter your current password.', 'danger'); return; }
+      if (np.length < 12) { showToast('New password must be at least 12 characters.', 'danger'); return; }
+      if (np !== cp) { showToast('New passwords do not match.', 'danger'); return; }
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentUser.token}` },
+          body: JSON.stringify({ currentPassword: cur, newPassword: np })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Password change failed.');
+        document.getElementById('passwordForm').reset();
+        showToast('Password updated successfully.', 'success');
+      } catch (error) {
+        showToast(error.message || 'Password change failed.', 'danger');
+      }
+    }
+
+    // ===== SMS GATEWAY CONFIG =====
+    const gw = { apiKeyConfigured: false, deviceIdConfigured: false, senderName: 'BINHS_ALERT', mode: 'simulation' };
+    document.getElementById('gwSenderName').value = gw.senderName;
+
+    function refreshModeUI() {
+      const isLive = gw.mode === 'live';
+      document.getElementById('modeSimulation').classList.toggle('selected', !isLive);
+      document.getElementById('modeLive').classList.toggle('selected', isLive);
+      const radio = document.querySelector(`input[name="gwMode"][value="${gw.mode}"]`);
+      if (radio) radio.checked = true;
+      // Live mode requires both API key and device ID configured
+      const liveReady = gw.apiKeyConfigured && gw.deviceIdConfigured;
+      document.getElementById('modeLive').classList.toggle('disabled', !liveReady);
+      if (!liveReady) {
+        document.getElementById('modeLive').title = 'Live mode requires TEXTBEE_API_KEY and TEXTBEE_DEVICE_ID environment variables.';
+      } else {
+        document.getElementById('modeLive').title = '';
+      }
+    }
+    document.getElementById('modeSimulation').onclick = () => { gw.mode = 'simulation'; refreshModeUI(); };
+    document.getElementById('modeLive').onclick = () => {
+      if (gw.apiKeyConfigured && gw.deviceIdConfigured) {
+        gw.mode = 'live';
+        refreshModeUI();
+      }
+    };
+
+    async function saveGateway() {
+      gw.senderName = document.getElementById('gwSenderName').value.trim() || 'BINHS_ALERT';
+      gw.mode = (document.querySelector('input[name="gwMode"]:checked') || {}).value || 'simulation';
+      if (gw.mode === 'live' && !(gw.apiKeyConfigured && gw.deviceIdConfigured)) {
+        showToast('Live mode requires TEXTBEE_API_KEY and TEXTBEE_DEVICE_ID environment variables.', 'danger');
+        return;
+      }
+      try {
+        const updates = { sms_gateway_mode: gw.mode, sms_sender_name: gw.senderName };
+        const response = await fetch(`${API_BASE_URL}/api/settings`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentUser.token}` }, body: JSON.stringify(updates) });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Could not save gateway settings.');
+        document.getElementById('gwApiKey').value = '';
+        await loadSettings();
+        showToast(`Gateway saved. Mode: ${gw.mode === 'live' ? 'Live API' : 'Simulation'}.`, 'success');
+      } catch (error) { showToast(error.message || 'Could not save gateway settings.', 'danger'); }
+    }
+
+    document.getElementById('btnTestSms').onclick = async () => {
+      const target = BINHS_DATA.students[0];
+      if (!target) { showToast('No students available to test with.', 'warning'); return; }
+      showToast('Dispatching test SMS...', 'info');
+      await SmsGateway.sendSms({
+        lrn: target.lrn,
+        parentContact: target.parentContact,
+        message: `BINHS test message (${gw.mode === 'live' ? 'LIVE' : 'SIMULATION'}): gateway configuration verified.`
+      });
+      showToast(`Test SMS ${gw.mode === 'live' ? 'sent' : 'simulated'} to ${target.parentName}.`, 'success');
+    };
+
+    // ===== CLEAR ACADEMIC DATA =====
+    document.getElementById('btnClearAcademicData').onclick = async () => {
+      if (!confirm('Clear ALL academic data? This will delete assessments, assessment scores, attendance records, system logs, and notification logs. Students, accounts, settings, and Decision Tree models will be preserved. This cannot be undone.')) return;
+      const btn = document.getElementById('btnClearAcademicData');
+      if (btn) btn.disabled = true;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/clear-academic-data`, { method: 'POST', headers: { Authorization: `Bearer ${currentUser.token}` } });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Clear academic data failed.');
+        localStorage.removeItem('BINHS_STORE_V1');
+        showToast(result.message || 'Academic data cleared successfully.', 'success');
+        setTimeout(() => location.reload(), 800);
+      } catch (error) {
+        showToast(error.message, 'danger');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    };
+
+    async function loadSettings() {
+      try {
+        const [profileResponse, settingsResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/auth/profile`, { headers: { Authorization: `Bearer ${currentUser.token}` } }),
+          fetch(`${API_BASE_URL}/api/settings`, { headers: { Authorization: `Bearer ${currentUser.token}` } })
+        ]);
+         const profileResult = profileResponse.ok ? await profileResponse.json().catch(() => null) : null;
+         const settingsResult = settingsResponse.ok ? await settingsResponse.json().catch(() => null) : null;
+         if (profileResult && profileResult.success) {
+           const profile = profileResult.profile;
+           document.getElementById('setFullName').value = profile.name || '';
+           document.getElementById('setEmail').value = profile.email || '';
+           document.getElementById('setPhone').value = profile.phone || '';
+           document.getElementById('setPosition').value = profile.roleTitle || '';
+         }
+         if (settingsResult && settingsResult.success) {
+           const settings = settingsResult.settings;
+           gw.mode = settings.sms_gateway_mode || 'simulation';
+           gw.senderName = settings.sms_sender_name || 'BINHS_ALERT';
+           gw.apiKeyConfigured = settings.textbee_api_key_configured || false;
+           gw.deviceIdConfigured = settings.textbee_device_id_configured || false;
+           document.getElementById('gwSenderName').value = gw.senderName;
+           document.getElementById('gwApiKey').placeholder = gw.apiKeyConfigured ? 'API key configured (from .env)' : 'Not configured';
+           document.getElementById('gwDeviceId').placeholder = gw.deviceIdConfigured ? 'Device ID configured (from .env)' : 'Not configured';
+           document.getElementById('gwApiKeyStatus').textContent = gw.apiKeyConfigured ? '✓ Configured via .env' : '✗ Not configured';
+           document.getElementById('gwDeviceIdStatus').textContent = gw.deviceIdConfigured ? '✓ Configured via .env' : '✗ Not configured';
+         }
+         refreshModeUI();
+       } catch { showToast('Could not load saved settings.', 'danger'); refreshModeUI(); }
+    }
+
+     // ===== INIT =====
+     (async () => {
+       await loadSettings();
+     })();
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+</head>

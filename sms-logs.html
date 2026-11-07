@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | SMS Gateway Logs</title>
+  <meta name="description" content="Audit trail of automated and manual parent SMS notifications dispatched via the TextBee gateway.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Auth Guard: admin-only page -->
+  <script>
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+    else if (_user.role !== 'Admin') window.location.href = 'dashboard.html';
+  </script>
+
+  <div class="app-layout">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar"></aside>
+    <script src="js/admin-sidebar.js"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div>
+            <h1 class="page-title">SMS Gateway Logs</h1>
+            <p class="page-subtitle">Audit trail of automated and manual parent notifications.</p>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <div class="user-menu-wrapper">
+            <button class="top-user-pill" id="btnTopUserMenu" type="button">
+              <div class="top-user-avatar-wrapper">
+                <div class="top-user-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <span class="top-user-status-dot"></span>
+              </div>
+              <div class="top-user-details">
+                <span class="top-user-name" id="topUserName">Roldan R. Arreza</span>
+                <span class="top-user-role" id="topUserRole">Teacher / Advisor</span>
+              </div>
+              <svg class="top-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="user-dropdown-menu" id="userProfileDropdown">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <div class="user-dropdown-info">
+                  <strong class="user-dropdown-name" id="dropdownUserName">Roldan R. Arreza</strong>
+                  <span class="user-dropdown-role" id="dropdownUserRole">Teacher / Advisor</span>
+                </div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <div class="user-dropdown-actions">
+                <button class="user-dropdown-item logout-item" id="topBtnLogout" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-container">
+        <!-- ========== SUMMARY METRICS ========== -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="metric-label">TOTAL MESSAGES</div>
+            </div>
+            <div class="metric-value" id="smsStatTotal">0</div>
+            <div class="metric-footnote">Logged gateway transactions</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div class="metric-label">DELIVERED</div>
+            </div>
+            <div class="metric-value" id="smsStatDelivered">0</div>
+            <div class="metric-footnote">Successfully dispatched</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
+              <div class="metric-label">GATEWAY MODE</div>
+            </div>
+            <div class="metric-value" id="smsStatMode" style="font-size:20px;">-</div>
+            <div class="metric-footnote">TextBee SMS gateway</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon-box red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="metric-label">LAST DELIVERY</div>
+            </div>
+            <div class="metric-value" id="smsStatLast" style="font-size:16px;">--</div>
+            <div class="metric-footnote">Most recent dispatch</div>
+          </div>
+        </div>
+
+        <!-- ========== PANEL HEADER ========== -->
+        <div class="panel-header-bar">
+          <div>
+            <h2 class="panel-title">Notification History</h2>
+            <p class="panel-desc">Every parent SMS dispatched by the system, automated or manual.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btnExportSmsLogs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Export CSV</span>
+            </button>
+            <button class="btn btn-primary" id="btnComposeSms">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>New Message</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== FILTERS ========== -->
+        <div class="filter-bar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="smsSearchInput" placeholder="Search by LRN, contact number, or message...">
+          </div>
+          <div class="filter-controls">
+            <select id="smsStatusFilter" class="styled-select">
+              <option value="all">All Statuses</option>
+              <option value="delivered">Delivered</option>
+              <option value="pending">Pending / Other</option>
+            </select>
+            <select id="smsGatewayFilter" class="styled-select">
+              <option value="all">All Channels</option>
+              <option value="simulator">Simulated</option>
+              <option value="live">Live API</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ========== LOGS TABLE ========== -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="smsLogsTable">
+              <thead>
+                <tr>
+                  <th>Log ID</th>
+                  <th>Date &amp; Time</th>
+                  <th>LRN</th>
+                  <th>Parent Contact</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="smsLogsTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-footer-pagination">
+            <span id="smsLogsCount">Showing 0 messages</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <!-- ========== COMPOSE SMS MODAL ========== -->
+  <div class="modal-overlay" id="smsComposeModal">
+    <div class="modal-dialog modal-md">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Send Parent SMS</h3>
+          <span class="modal-subtitle">Direct dispatch via TextBee API Gateway</span>
+        </div>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="smsComposeForm">
+          <div class="form-group">
+            <label for="composeLrn">Student:</label>
+            <select id="composeLrn" class="styled-select"></select>
+          </div>
+          <div class="form-group">
+            <label for="composePhone">Parent Contact Number:</label>
+            <input type="text" id="composePhone" class="styled-input" placeholder="09XXXXXXXXX" required>
+          </div>
+          <div class="form-group">
+            <label for="composeMessage">Message:</label>
+            <textarea id="composeMessage" class="styled-textarea" rows="5" required></textarea>
+            <div class="char-count-bar"><span id="composeCharCount">0 / 160 characters</span></div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" id="btnSendComposeSms">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Dispatch SMS</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/data-secure.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/sms.js"></script>
+  <script>
+    // ===== AUTH & USER =====
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null') || { name: 'Roldan R. Arreza', role: 'Teacher' };
+    const roleTitle = currentUser.role === 'Admin' ? 'System Administrator' : 'Teacher / Advisor';
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    ['sidebarUserName', 'topUserName', 'dropdownUserName'].forEach(id => setText(id, currentUser.name));
+    ['sidebarUserRole', 'topUserRole', 'dropdownUserRole'].forEach(id => setText(id, roleTitle));
+    const assignedSections = Array.isArray(currentUser.sections) ? currentUser.sections.filter(Boolean) : [];
+    setText('sidebarUserSection', currentUser.role === 'Admin' ? 'All SHS Sections' : (assignedSections.length ? `${assignedSections.join(', ')} Adviser` : 'No section assigned'));
+    if (currentUser.role === 'Admin' && document.getElementById('adminMenuSection')) document.getElementById('adminMenuSection').style.display = 'block';
+
+    // ===== SIDEBAR / DROPDOWN / LOGOUT =====
+    document.getElementById('mobileMenuBtn').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+    const userBtn = document.getElementById('btnTopUserMenu');
+    const userDropdown = document.getElementById('userProfileDropdown');
+    userBtn.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle('active'); };
+    document.addEventListener('click', () => userDropdown.classList.remove('active'));
+    function doLogout() { sessionStorage.removeItem('binhs_user'); window.location.href = 'index.html'; }
+    document.getElementById('btnLogout').onclick = doLogout;
+    document.getElementById('topBtnLogout').onclick = doLogout;
+
+    // ===== TOAST =====
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `<span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    // ===== MODALS =====
+    function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+    function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+    document.querySelectorAll('[data-close-modal]').forEach(btn => btn.onclick = () => btn.closest('.modal-overlay')?.classList.remove('active'));
+    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
+
+    // ===== STATE / HELPERS =====
+    const state = { search: '', status: 'all', channel: 'all' };
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+    const channelOf = (status) => String(status || '').toLowerCase().includes('live') ? 'live' : 'simulator';
+    const statusOf = (status) => {
+      const s = String(status || '').toLowerCase();
+      if (s.includes('deliver')) return 'delivered';
+      if (s.includes('fail') || s.includes('error')) return 'failed';
+      return 'pending';
+    };
+
+    function filteredLogs() {
+      const q = state.search.trim().toLowerCase();
+      return (BINHS_DATA.notificationLogs || []).filter(log => {
+        const matchQ = !q
+          || String(log.lrn).toLowerCase().includes(q)
+          || String(log.parentContact).toLowerCase().includes(q)
+          || String(log.message).toLowerCase().includes(q);
+        const matchStatus = state.status === 'all' || statusOf(log.status) === state.status;
+        const matchChannel = state.channel === 'all' || channelOf(log.status) === state.channel;
+        return matchQ && matchStatus && matchChannel;
+      });
+    }
+
+    function renderStats() {
+      const logs = BINHS_DATA.notificationLogs || [];
+      const delivered = logs.filter(l => statusOf(l.status) === 'delivered').length;
+      setText('smsStatTotal', logs.length);
+      setText('smsStatDelivered', delivered);
+      setText('smsStatMode', (BINHS_DATA.gatewayConfig && BINHS_DATA.gatewayConfig.mode === 'live') ? 'LIVE' : 'SIMULATION');
+      setText('smsStatLast', logs.length ? logs[0].dateSent : '--');
+    }
+
+    function renderLogs() {
+      const tbody = document.getElementById('smsLogsTableBody');
+      const rows = filteredLogs();
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:26px;color:#64748B;">No SMS messages match the current filters.</td></tr>';
+      } else {
+        tbody.innerHTML = rows.map(log => {
+          const st = statusOf(log.status);
+          const badgeCls = st === 'delivered' ? 'success' : (st === 'failed' ? 'danger' : 'warning');
+          return `<tr>
+            <td class="font-mono" style="font-size:12px;">#${esc(log.logId)}</td>
+            <td style="white-space:nowrap;font-size:12.5px;color:#475569;">${esc(log.dateSent)}</td>
+            <td class="font-mono" style="font-size:12px;">${esc(log.lrn)}</td>
+            <td class="font-mono" style="font-size:12px;">${esc(log.parentContact)}</td>
+            <td style="max-width:420px;font-size:12.5px;line-height:1.45;">${esc(log.message)}</td>
+            <td><span class="badge-pill ${badgeCls}">${esc(log.status)}</span></td>
+          </tr>`;
+        }).join('');
+      }
+      setText('smsLogsCount', `Showing ${rows.length} of ${(BINHS_DATA.notificationLogs || []).length} messages`);
+    }
+
+    function renderAll() { renderStats(); renderLogs(); }
+
+    // ===== FILTER BINDINGS =====
+    document.getElementById('smsSearchInput').oninput = (e) => { state.search = e.target.value; renderLogs(); };
+    document.getElementById('smsStatusFilter').onchange = (e) => { state.status = e.target.value; renderLogs(); };
+    document.getElementById('smsGatewayFilter').onchange = (e) => { state.channel = e.target.value; renderLogs(); };
+
+    // ===== EXPORT CSV =====
+    document.getElementById('btnExportSmsLogs').onclick = () => {
+      const rows = filteredLogs();
+      const csv = ['Log ID,Date Sent,LRN,Parent Contact,Message,Status']
+        .concat(rows.map(l => [l.logId, l.dateSent, l.lrn, l.parentContact, l.message, l.status]
+          .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')))
+        .join('\n');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      link.download = 'sms-gateway-logs.csv';
+      document.body.appendChild(link); link.click(); link.remove();
+      showToast('SMS gateway logs exported.', 'success');
+    };
+
+    // ===== COMPOSE MODAL =====
+    const composeLrn = document.getElementById('composeLrn');
+    const composePhone = document.getElementById('composePhone');
+    const composeMessage = document.getElementById('composeMessage');
+    const composeCharCount = document.getElementById('composeCharCount');
+
+    function fillComposeForStudent(lrn) {
+      const student = BINHS_DATA.students.find(s => s.lrn === lrn);
+      if (!student) return;
+      composeLrn.value = student.lrn;
+      composePhone.value = student.parentContact || '';
+      const evaluation = AnalyticsEngine.evaluateStudent(student);
+      composeMessage.value = SmsGateway.generateTemplate(student, evaluation);
+      composeCharCount.textContent = `${composeMessage.value.length} / 160 characters`;
+    }
+
+    document.getElementById('btnComposeSms').onclick = () => {
+      if (!composeLrn.options.length) {
+        composeLrn.innerHTML = BINHS_DATA.students
+          .map(s => `<option value="${s.lrn}">${esc(s.firstName)} ${esc(s.lastName)} - ${esc(s.lrn)}</option>`)
+          .join('');
+      }
+      fillComposeForStudent(composeLrn.value || (BINHS_DATA.students[0] && BINHS_DATA.students[0].lrn));
+      openModal('smsComposeModal');
+    };
+    composeLrn.onchange = () => fillComposeForStudent(composeLrn.value);
+    composeMessage.oninput = () => { composeCharCount.textContent = `${composeMessage.value.length} / 160 characters`; };
+
+    document.getElementById('btnSendComposeSms').onclick = async () => {
+      const lrn = composeLrn.value;
+      const message = composeMessage.value.trim();
+      const phone = composePhone.value.trim();
+      if (!lrn || !message || !phone) { showToast('Please complete all fields before sending.', 'danger'); return; }
+      const btn = document.getElementById('btnSendComposeSms');
+      btn.disabled = true;
+      const result = await SmsGateway.sendSms({ lrn, parentContact: phone, message });
+      btn.disabled = false;
+      closeModal('smsComposeModal');
+      showToast(`SMS ${result.success ? 'dispatched' : 'queued'} to ${phone}.`, result.success ? 'success' : 'warning');
+      renderAll();
+    };
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+      renderAll();
+    });
+  </script>
+</body>
+</html>

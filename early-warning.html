@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | Early Warning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ==========================================================================
+       BINHS Early Warning - Green Theme Redesign (self-contained)
+       ========================================================================== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Sidebar (dark green) */
+      --sidebar-bg: #0F2A1C;
+      --sidebar-bg-2: #123524;
+      --sidebar-border: rgba(255, 255, 255, 0.08);
+      --sidebar-text: #A7B7AE;
+      --active-from: #15803D;
+      --active-to: #22C55E;
+
+      /* Primary green */
+      --primary: #15803D;
+      --primary-dark: #166534;
+      --primary-light: #F0FDF4;
+      --primary-border: #BBF7D0;
+
+      /* Teal (4th stat card / secondary accent) */
+      --teal: #0D9488;
+      --teal-light: #ECFDF5;
+      --teal-border: #99F6E4;
+
+      /* Risk semantics */
+      --danger: #DC2626;
+      --danger-soft: #EF4444;
+      --danger-light: #FEF2F2;
+      --danger-border: #FECACA;
+      --amber: #D97706;
+      --amber-light: #FFFBEB;
+      --amber-border: #FDE68A;
+      --success: #16A34A;
+
+      /* Neutrals */
+      --text: #0F172A;
+      --text-2: #334155;
+      --muted: #64748B;
+      --muted-2: #94A3B8;
+      --border: #E7EBF0;
+      --border-2: #EEF1F5;
+      --bg: #F6F8FB;
+      --card: #FFFFFF;
+
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    html, body { min-height: 100%; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { text-decoration: none; color: inherit; }
+    button, input, select { font-family: inherit; }
+    svg { display: block; }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ============================ SIDEBAR ============================ */
+    .sidebar {
+      width: 250px;
+      background: #123524;
+      border-right: 1px solid #1B4332;
+      position: fixed;
+      inset: 0 auto 0 0;
+      display: flex;
+      flex-direction: column;
+      color: #fff;
+      z-index: 100;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
+    .school-logo-badge, .logo-badge {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(21, 128, 61, 0.35);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 10px;
+      flex-shrink: 0;
+      padding: 3px;
+    }
+    .logo-badge svg, .school-logo-svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)); }
+    .brand-title { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.1; color: #FFFFFF; }
+    .brand-sub, .brand-subtitle { font-size: 11px; color: #94A3B8; font-weight: 500; letter-spacing: 0.2px; margin-top: 2px; }
+
+    .nav, .nav-menu { padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 9px;
+      color: #94A3B8;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .nav-item svg, .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item:hover { background-color: #1B4332; color: #FFFFFF; transform: translateX(2px); }
+    .nav-item.active {
+      background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+      color: #FFFFFF;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+      border: 1px solid rgba(134, 239, 172, 0.25);
+    }
+    .nav-item.active svg, .nav-item.active .nav-icon { opacity: 1; }
+
+    /* Sidebar Footer / Bottom part (Refined Green Glassmorphic Design) */
+    .sidebar-footer {
+      padding: 12px 12px 14px 12px;
+      border-top: 1px solid rgba(34, 197, 94, 0.15);
+      background: linear-gradient(180deg, rgba(14, 43, 29, 0.95) 0%, rgba(9, 28, 18, 0.98) 100%);
+      flex-shrink: 0;
+    }
+    .current-user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      background: linear-gradient(135deg, rgba(20, 83, 45, 0.35) 0%, rgba(14, 50, 31, 0.6) 100%);
+      border: 1px solid rgba(74, 222, 128, 0.22);
+      border-radius: 11px;
+      margin-bottom: 8px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.18);
+      transition: all 0.15s ease;
+    }
+    .current-user-card:hover {
+      background: linear-gradient(135deg, rgba(22, 101, 52, 0.45) 0%, rgba(18, 60, 38, 0.75) 100%);
+      border-color: rgba(74, 222, 128, 0.38);
+    }
+    .user-avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #22C55E 0%, #15803D 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.35);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+    }
+    .user-avatar-circle svg { width: 20px; height: 20px; }
+    .user-info-text { min-width: 0; flex: 1; }
+    .user-name {
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.1px;
+    }
+    .user-role { color: #94A3B8; font-size: 11px; font-weight: 500; }
+    .user-section-badge {
+      color: #4ADE80;
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-actions { display: flex; flex-direction: column; gap: 2px; }
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #94A3B8;
+      font-size: 12.5px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    .footer-btn svg {
+      width: 16px;
+      height: 16px;
+      color: #4ADE80;
+      opacity: 0.85;
+      transition: all 0.15s ease;
+    }
+    .footer-btn:hover {
+      background: rgba(34, 197, 94, 0.12);
+      color: #FFFFFF;
+      border-color: rgba(34, 197, 94, 0.22);
+      transform: translateX(2px);
+    }
+    .footer-btn:hover svg {
+      opacity: 1;
+      transform: scale(1.08);
+      color: #86EFAC;
+    }
+    .footer-btn.logout-btn { color: #94A3B8; }
+    .footer-btn.logout-btn svg { color: #F87171; }
+    .footer-btn.logout-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #FCA5A5;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    /* ============================ MAIN ============================ */
+    .main { flex: 1; margin-left: 250px; min-height: 100vh; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: 78px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .page-title { font-size: 22px; font-weight: 800; }
+    .page-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    .top-right { display: flex; align-items: center; gap: 18px; }
+    .icon-btn {
+      position: relative;
+      width: 42px; height: 42px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .icon-btn svg { width: 20px; height: 20px; }
+    .badge-count {
+      position: absolute; top: -5px; right: -5px;
+      min-width: 19px; height: 19px; padding: 0 5px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 10.5px; font-weight: 700;
+      display: grid; place-items: center;
+      border: 2px solid #fff;
+    }
+    .user-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 4px 12px 4px 5px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .user-pill:hover {
+      border-color: rgba(34, 197, 94, 0.5);
+      box-shadow: 0 3px 12px rgba(22, 163, 74, 0.12);
+      transform: translateY(-1px);
+    }
+    .user-pill .av {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, #22C55E, #15803D);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(22, 163, 74, 0.35);
+      border: 1.5px solid #fff;
+      flex-shrink: 0;
+    }
+    .user-pill .av svg { width: 19px; height: 19px; }
+    .user-pill .det { display: flex; flex-direction: column; }
+    .user-pill b { font-size: 13px; font-weight: 700; display: block; line-height: 1.25; color: #0F172A; }
+    .user-pill small { font-size: 11px; font-weight: 600; color: #15803D; line-height: 1.2; }
+    .chev { color: #94A3B8; transition: transform 0.2s ease; flex-shrink: 0; }
+    .user-pill:hover .chev { color: #15803D; }
+
+    .content { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* ============================ STAT CARDS ============================ */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+    .stat-card {
+      position: relative;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .stat-label { font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; }
+    .stat-main { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+    .stat-icon { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; }
+    .stat-icon svg { width: 30px; height: 30px; }
+    .stat-num { font-size: 32px; font-weight: 800; line-height: 1; }
+    .stat-sub { font-size: 12.5px; color: var(--muted); margin-top: 12px; }
+    .stat-bar { height: 6px; border-radius: 999px; background: var(--border-2); margin-top: 12px; overflow: hidden; }
+    .stat-bar i { display: block; height: 100%; border-radius: 999px; }
+
+    .stat-card.at-risk { background: linear-gradient(180deg, #FFF8F8, #fff); }
+    .stat-card.at-risk .stat-label, .stat-card.at-risk .stat-icon { color: var(--danger); }
+    .stat-card.at-risk .stat-bar i { background: var(--danger-soft); }
+
+    .stat-card.monitor { background: linear-gradient(180deg, #FFFCF5, #fff); }
+    .stat-card.monitor .stat-label, .stat-card.monitor .stat-icon { color: var(--amber); }
+    .stat-card.monitor .stat-bar i { background: #F59E0B; }
+
+    .stat-card.safe { background: linear-gradient(180deg, #F7FDF8, #fff); }
+    .stat-card.safe .stat-label, .stat-card.safe .stat-icon { color: var(--success); }
+    .stat-card.safe .stat-bar i { background: #22C55E; }
+
+    .stat-card.average { background: linear-gradient(180deg, #F6FEFC, #fff); }
+    .stat-card.average .stat-label, .stat-card.average .stat-icon { color: var(--teal); }
+
+    /* ============================ FILTER BAR ============================ */
+    .filter-bar {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 11.5px; font-weight: 700; color: var(--muted); }
+    .field select, .field input {
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-2);
+      background: #fff;
+      min-width: 150px;
+      outline: none;
+    }
+    .field select:focus, .field input:focus { border-color: var(--primary); }
+    .search-wrap { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      min-width: 240px;
+      color: var(--muted-2);
+    }
+    .search-box svg { width: 17px; height: 17px; flex: 0 0 auto; }
+    .search-box input { border: 0; outline: 0; flex: 1; font-size: 13.5px; color: var(--text); background: transparent; }
+    .btn-filter {
+      height: 42px; padding: 0 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--primary);
+      background: #fff;
+      color: var(--primary);
+      font-weight: 700; font-size: 13.5px;
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer;
+    }
+    .btn-filter svg { width: 16px; height: 16px; }
+
+    /* ============================ WORKSPACE ============================ */
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 18px; align-items: start; }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .table-panel { padding: 20px 22px; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .panel-head h2 { font-size: 17px; font-weight: 800; }
+    .panel-head p { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+    .btn-export {
+      display: flex; align-items: center; gap: 8px;
+      height: 40px; padding: 0 16px;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      background: #fff;
+      border-radius: var(--radius-sm);
+      font-weight: 700; font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-export svg { width: 16px; height: 16px; }
+
+    /* ============================ TABLE ============================ */
+    .table-scroll { overflow-x: auto; }
+    table.data { width: 100%; border-collapse: collapse; }
+    table.data th {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
+      color: var(--muted); font-weight: 800; text-align: left;
+      padding: 10px 8px; border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    table.data td {
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--border-2);
+      font-size: 13.5px;
+      vertical-align: middle;
+      color: var(--text-2);
+    }
+    table.data tbody tr { cursor: pointer; transition: background 0.12s ease; }
+    table.data tbody tr:hover { background: #FAFBFC; }
+    table.data tbody tr.selected { background: var(--primary-light); }
+    .col-check { width: 34px; }
+    .col-num { width: 34px; color: var(--muted); }
+
+    .name-cell { display: flex; align-items: center; gap: 10px; }
+    .row-avatar {
+      width: 30px; height: 30px; flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: grid; place-items: center;
+    }
+    .row-avatar svg { width: 17px; height: 17px; }
+    .name-cell b { font-size: 13.5px; color: var(--text); font-weight: 700; }
+    .lrn { font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+    .grade.bad, .abs.bad { color: var(--danger); font-weight: 800; }
+    .grade.ok, .abs.ok { color: var(--text-2); font-weight: 700; }
+
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+    .badge.risk { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
+    .badge.monitor { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-border); }
+    .badge.ok { background: var(--teal-light); color: var(--teal); border: 1px solid var(--teal-border); }
+    .badge.muted { background: var(--border-2); color: var(--muted-2); border: 1px solid var(--border); }
+
+    .reasons { list-style: none; font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .reasons li { position: relative; padding-left: 12px; }
+    .reasons li::before {
+      content: ""; position: absolute; left: 0; top: 7px;
+      width: 5px; height: 5px; border-radius: 50%; background: var(--muted-2);
+    }
+    .actions { display: flex; gap: 8px; }
+    .act-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: grid; place-items: center;
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .act-btn svg { width: 16px; height: 16px; }
+    .act-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .table-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; }
+    .table-foot .count { font-size: 12.5px; color: var(--muted); }
+    .pager { display: flex; gap: 8px; }
+    .pager button {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-2);
+      font-weight: 700; font-size: 13px;
+      cursor: pointer;
+    }
+    .pager button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+    .pager button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .pager button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ============================ DETAIL PANEL ============================ */
+    .detail { position: relative; padding: 22px; }
+    .detail-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 30px; height: 30px;
+      border: 0; background: transparent;
+      color: var(--muted); cursor: pointer;
+      display: grid; place-items: center;
+      border-radius: 8px;
+    }
+    .detail-close svg { width: 18px; height: 18px; }
+    .detail-close:hover { background: var(--border-2); color: var(--text); }
+
+    .detail-head { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .detail-avatar {
+      width: 64px; height: 64px; flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--primary-light);
+      display: grid; place-items: center;
+      overflow: hidden;
+    }
+    .detail-avatar svg { width: 40px; height: 40px; color: var(--primary); }
+    .dh-top { display: flex; align-items: center; gap: 10px; }
+    .dh-top h3 { font-size: 17px; font-weight: 800; }
+    .detail-head small { font-size: 12px; color: var(--muted); display: block; margin-top: 3px; }
+    .detail-head .sect { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-top: 5px; }
+    .detail-head .sect svg { width: 14px; height: 14px; }
+
+    .d-sec { padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .d-sec.tight { padding-bottom: 0; border-bottom: 0; }
+    .d-sec h4 { font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .d-sec h4 svg { width: 16px; height: 16px; }
+    .d-sec h4.risk-title { color: var(--danger); }
+    .d-sec > p.intro { font-size: 12.5px; color: var(--text-2); line-height: 1.5; margin-top: 8px; }
+    .bullets { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .bullets li { font-size: 12.5px; color: var(--text-2); display: flex; gap: 8px; align-items: flex-start; }
+    .bullets li::before {
+      content: ""; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--danger); margin-top: 6px; flex: 0 0 auto;
+    }
+    .bullets b { color: var(--text); }
+    .last-eval { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted-2); margin-top: 12px; }
+    .last-eval svg { width: 13px; height: 13px; }
+
+    .qrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .qrow div { font-size: 11.5px; color: var(--muted); }
+    .qrow b { display: block; color: var(--text); font-size: 13px; margin-top: 3px; }
+    .metrics3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-top: 1px solid var(--border-2); margin-top: 14px; padding-top: 14px; }
+    .metrics4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+    .metrics3 small, .metrics4 small { display: block; font-size: 11px; color: var(--muted); line-height: 1.35; }
+    .metrics3 b, .metrics4 b { display: block; font-size: 16px; font-weight: 800; margin-top: 4px; }
+    .metrics3 b.danger, .metrics4 b.danger { color: var(--danger); }
+    .metrics4 b.success { color: var(--success); }
+    .metrics4 b em { font-style: normal; font-size: 11px; font-weight: 600; }
+
+    .recommend {
+      margin-top: 16px;
+      background: var(--amber-light);
+      border: 1px solid var(--amber-border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .recommend h5 { font-size: 13px; font-weight: 800; color: var(--amber); display: flex; align-items: center; gap: 8px; }
+    .recommend h5 svg { width: 16px; height: 16px; }
+    .recommend p { font-size: 12px; color: #92400E; margin-top: 6px; line-height: 1.5; }
+
+    .detail-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .btn {
+      flex: 1; height: 46px;
+      border-radius: 11px;
+      font-size: 13.5px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      cursor: pointer;
+    }
+    .btn svg { width: 17px; height: 17px; }
+    .btn-ghost { background: #fff; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-primary {
+      background: var(--primary);
+      border: 1px solid var(--primary);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(21, 128, 61, 0.25);
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    /* ============================ RESPONSIVE ============================ */
+    @media (max-width: 1240px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .search-wrap { margin-left: 0; width: 100%; }
+      .search-box { flex: 1; min-width: 0; }
+    }
+    @media (max-width: 560px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .content, .topbar { padding-left: 16px; padding-right: 16px; }
+      .user-pill .det { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Guard -->
+  <script>
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[character]));
+    }
+
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+  </script>
+
+  <div class="app">
+    <!-- ============================ SIDEBAR ============================ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="school-logo-badge">
+          <!-- BINHS Shield Crest SVG -->
+          <svg class="school-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 8L15 22V52C15 72 30 89 50 95C70 89 85 72 85 52V22L50 8Z" fill="#166534" stroke="#F59E0B" stroke-width="3"/>
+            <path d="M50 14L21 26V50C21 67 33 82 50 88C67 82 79 67 79 50V26L50 14Z" fill="#123524"/>
+            <path d="M30 65C40 60 48 61 50 63C52 61 60 60 70 65C62 55 55 55 50 58C45 55 38 55 30 65Z" fill="#F59E0B"/>
+            <circle cx="50" cy="38" r="9" fill="#F59E0B"/>
+            <path d="M48 24H52V35H48V24Z" fill="#E2E8F0"/>
+            <path d="M43 45L57 45L54 55L46 55Z" fill="#22C55E"/>
+            <circle cx="34" cy="33" r="2.5" fill="#F59E0B"/>
+            <circle cx="66" cy="33" r="2.5" fill="#F59E0B"/>
+            <circle cx="50" cy="22" r="2.5" fill="#F59E0B"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">BINHS</div>
+          <div class="brand-subtitle">Early Warning System</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="student.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Students</span>
+        </a>
+
+        <a href="academic-records.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M8 14h8"></path>
+            <path d="M8 18h5"></path>
+          </svg>
+          <span>Academic Records</span>
+        </a>
+
+        <a href="attendance.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>Attendance</span>
+        </a>
+
+        <a href="early-warning.html" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Early Warning</span>
+        </a>
+
+        <a href="reports.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>Reports</span>
+        </a>
+
+        <a href="academic-settings.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Academic Settings</span>
+        </a>
+
+        <!-- Admin Only -->
+        <div class="admin-menu-section" id="adminMenuSection" style="display:none;">
+          <div class="menu-divider">ADMIN CONTROLS</div>
+          <a href="user-management.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <line x1="19" y1="8" x2="19" y2="14"></line>
+              <line x1="22" y1="11" x2="16" y2="11"></line>
+            </svg>
+            <span>Manage Users</span>
+          </a>
+          <a href="sms-logs.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              <line x1="8" y1="10" x2="16" y2="10"></line>
+              <line x1="8" y1="14" x2="13" y2="14"></line>
+            </svg>
+            <span>SMS Gateway Logs</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="current-user-card" id="sidebarUserCard">
+          <div class="user-avatar-circle" id="sidebarAvatar">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </div>
+          <div class="user-info-text">
+            <div class="user-name" id="sidebarUserName">Roldan R. Arreza</div>
+            <div class="user-role" id="sidebarUserRole">Teacher / Advisor</div>
+            </div>
+        </div>
+
+        <div class="sidebar-actions">
+          <button type="button" class="footer-btn logout-btn" id="btnLogout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================ MAIN ============================ -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Early Warning</h1>
+          <p class="page-sub">Monitor and manage students who are at risk based on academic performance and attendance.</p>
+        </div>
+        <div class="top-right">
+          <button class="icon-btn" id="ewBellBtn" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="badge-count" id="ewBellBadge" hidden>0</span>
+          </button>
+          <div class="notification-dropdown" id="ewNotifDropdown">
+            <div class="dropdown-header">
+              <strong>Alerts & Early Warnings</strong>
+              <span class="badge-pill" id="ewNotifBadgePill">0</span>
+            </div>
+            <div class="dropdown-list" id="ewNotifDropdownList">
+            </div>
+          </div>
+          <div class="user-pill">
+            <div class="av">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </div>
+            <div class="det">
+              <b id="ewTopUserName">Roldan R. Arreza</b>
+              <small id="ewTopUserRole">Teacher / Advisor</small>
+            </div>
+            <svg class="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- STAT CARDS -->
+        <div class="stat-grid">
+          <div class="stat-card at-risk">
+            <div class="stat-label">At-Risk Students</div>
+            <div class="stat-main">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div class="stat-num" id="ewAtRiskNum">5</div>
+            </div>
+            <div class="stat-sub" id="ewAtRiskSub">11.9% of 42 students</div>
+            <div class="stat-bar"><i id="ewAtRiskBar" style="width:12%"></i></div>
+          </div>
+
+          <div class="stat-card monitor">
+            <div class="stat-label">Monitor (Moderate Risk)</div>
+            <div class="stat-main">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="stat-num" id="ewMonitorNum">7</div>
+            </div>
+            <div class="stat-sub" id="ewMonitorSub">16.7% of 42 students</div>
+            <div class="stat-bar"><i id="ewMonitorBar" style="width:17%"></i></div>
+          </div>
+
+          <div class="stat-card safe">
+            <div class="stat-label">Not At-Risk</div>
+            <div class="stat-main">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              </div>
+              <div class="stat-num" id="ewLowNum">30</div>
+            </div>
+            <div class="stat-sub" id="ewLowSub">71.4% of 42 students</div>
+            <div class="stat-bar"><i id="ewLowBar" style="width:71%"></i></div>
+          </div>
+
+          <div class="stat-card" style="border-left:4px solid #94a3b8;">
+            <div class="stat-label">Insufficient Data</div>
+            <div class="stat-main">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="stat-num" id="ewInsufficientNum">0</div>
+            </div>
+            <div class="stat-sub" id="ewInsufficientSub">0% of 0 students</div>
+          </div>
+
+<div class="stat-card average">
+            <div class="stat-label">Overall Class Average</div>
+            <div class="stat-main">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </div>
+              <div class="stat-num" id="ewAvgNum">82.6</div>
+            </div>
+            <div class="stat-sub">Current average grade</div>
+          </div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+          <div class="field">
+            <label>School Year</label>
+            <select><option>2026 - 2027</option><option>2025 - 2026</option></select>
+          </div>
+          <div class="field">
+            <label>Grade Level</label>
+            <select id="ewGradeLevelFilter"><option value="" disabled selected>Loading grade levels...</option></select>
+          </div>
+          <div class="field">
+            <label>Section</label>
+            <select id="ewSectionFilter">
+              <option value="all" selected>All Sections</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>View</label>
+            <select id="ewViewFilter">
+              <option value="all" selected>All Risk Levels</option>
+              <option value="AT-RISK">At-Risk Only</option>
+              <option value="MONITOR">Monitor Only</option>
+            </select>
+          </div>
+           <div class="field">
+             <label>Term</label>
+             <select id="ewTermFilter">
+               <option value="Term 1">Term 1</option>
+               <option value="Term 2">Term 2</option>
+               <option value="Term 3">Term 3</option>
+             </select>
+           </div>
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="searchInput" type="text" placeholder="Search student...">
+            </div>
+            <button class="btn-filter" id="ewFilterBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filter
+            </button>
+          </div>
+        </div>
+
+        <!-- WORKSPACE -->
+        <div class="workspace">
+          <section class="panel table-panel">
+            <div class="panel-head">
+              <div>
+                <h2>At-Risk and Monitoring Students</h2>
+                <p>List of students who require attention.</p>
+              </div>
+              <button class="btn-export" id="ewExportBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export List
+              </button>
+            </div>
+            <div class="table-scroll">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th class="col-check"><input type="checkbox" aria-label="Select all"></th>
+                    <th class="col-num">#</th>
+                    <th>Student Name</th>
+                    <th>LRN</th>
+                    <th>Average Grade</th>
+                    <th>Unexcused Absences</th>
+                    <th>Risk Level</th>
+                    <th>Reasons</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+            <div class="table-foot">
+              <span class="count" id="tableCount"></span>
+              <div class="pager" id="pager"></div>
+            </div>
+          </section>
+
+          <aside class="panel detail" id="detailPanel"></aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/data-secure.js"></script>
+  <script src="js/grade-calc.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    /* ==========================================================================
+       Early Warning workspace - Fixed to use local data store
+       The dataset below is from the shared BINHS_DATA store (js/data.js)
+       ========================================================================== */
+    const DAYS_TOTAL = 49;
+
+    // ===== ASSESSMENTS (matches Academic Records grading) =====
+    if (!Array.isArray(BINHS_DATA.assessments)) BINHS_DATA.assessments = [];
+    if (!BINHS_DATA.assessmentScores) BINHS_DATA.assessmentScores = {};
+
+    const AR_ASSESSMENTS = BINHS_DATA.assessments;
+    const totalMax = () => AR_ASSESSMENTS.reduce((sum, a) => sum + Number(a.max || 0), 0);
+
+    function seedScore(student, a) {
+      const key = `${student.lrn}:${a.id}`;
+      return BINHS_DATA.assessmentScores[key] ?? 0;
+    }
+
+    // ===== OFFICIAL QUARTERLY GRADE (via GradeCalc) =====
+    function ewAssessmentCategory(type) {
+      return GradeCalc.typeToComponent(type);
+    }
+    const EW_GRADE_WEIGHTS = GradeCalc.getSubjectWeights('General Mathematics');
+    function ewStudentWeightedGrade(student) {
+      if (!AR_ASSESSMENTS.length) return null;
+      const subjectName = Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0] ? BINHS_DATA.subjects[0] : 'General Mathematics';
+      const quarterLabel = `Term ${BINHS_DATA?.currentTerm || 1}`;
+      const scoreMap = {};
+      AR_ASSESSMENTS.forEach(a => {
+        const key = `${student.lrn}:${a.id}`;
+        const val = BINHS_DATA.assessmentScores[key];
+        if (val !== undefined && val !== null) scoreMap[a.id] = Number(val);
+      });
+      const result = GradeCalc.calculateQuarterlyGrade(AR_ASSESSMENTS, quarterLabel, subjectName, scoreMap);
+      return result.finalGrade;
+    }
+
+    function studentAssessmentGrade(s) {
+      return ewStudentWeightedGrade(s);
+    }
+
+    // Load data from js/data.js - the shared BINHS_DATA store
+    // This ensures the page works even when backend is unreachable
+    let students = [];
+    let studentsReady = false;
+    let assessmentsReady = false;
+    let assessmentsLoadedTerm = null;
+    let assessmentLoadPromise = null;
+    let assessmentLoadRequestId = 0;
+
+    let rendering = false;
+    async function tryRender() {
+      if (!studentsReady || !assessmentsReady || rendering) return;
+      rendering = true;
+      try {
+        await buildStudentsList();
+        populateSectionFilter();
+        renderTable();
+        updateStatCards();
+        selectStudent(0);
+      } finally {
+        rendering = false;
+      }
+    }
+
+    // ===== LOAD STUDENTS FROM BACKEND API =====
+    // Fetches student data with Q1 Decision Tree ML predictions from the backend.
+    // Falls back to local BINHS_DATA if the API is unavailable.
+    async function loadStudentsFromAPI() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token || typeof fetch === 'undefined') return null;
+      try {
+         const currentTerm = document.getElementById('ewTermFilter')?.value || BINHS_DATA?.currentTerm || 1;
+         const res = await fetch(`${window.location.origin}/api/students?term=${encodeURIComponent(currentTerm)}`, {
+           headers: { Authorization: `Bearer ${session.token}` }
+         });
+        if (!res.ok) return null;
+        const result = await res.json();
+        if (!result.success || !Array.isArray(result.students)) return null;
+        return result.students;
+      } catch (e) {
+        console.info('[Early Warning] Could not load students from API:', e.message);
+        return null;
+      }
+    }
+
+    // Build students list - calculates weighted grades from assessment data
+    // Falls back to local BINHS_DATA if API is unavailable
+    async function buildStudentsList() {
+      // Assessments must already be loaded by the caller. Do not trigger
+      // additional assessment requests here.
+
+       var dataSource = typeof BINHS_DATA !== 'undefined' ? BINHS_DATA : (window.BINHS_DATA || {});
+       // Load backend Decision Tree predictions and merge by LRN
+       const apiStudents = await loadStudentsFromAPI();
+       // Do not silently fall back to stale local student data if the API fails.
+       if (!Array.isArray(apiStudents)) {
+         dataSource.students = [];
+       }
+       const apiByLrn = {};
+       if (Array.isArray(apiStudents)) {
+         apiStudents.forEach(st => { apiByLrn[String(st.lrn)] = st; });
+       }
+
+      students = (dataSource.students || [])
+        .map((s) => {
+          const apiS = apiByLrn[String(s.lrn)];
+          if (apiS) {
+            s = Object.assign({}, s, {
+              riskLevel: apiS.riskLevel,
+              riskLabel: apiS.riskLabel,
+              riskReasons: apiS.riskReasons,
+              ruleBased: apiS.ruleBased,
+              mlPredictedRisk: apiS.mlPredictedRisk,
+              mlRiskLabel: apiS.mlRiskLabel,
+              mlConfidence: apiS.mlConfidence,
+              mlProbabilities: apiS.mlProbabilities,
+              mlReasons: apiS.mlReasons,
+              mlIntervention: apiS.mlIntervention,
+              computedGrade: apiS.computedGrade,
+            });
+          }
+           const backendGrade = (apiS && apiS.computedGrade !== null && apiS.computedGrade !== undefined)
+             ? Number(apiS.computedGrade)
+             : null;
+           const grade = (backendGrade !== null && Number.isFinite(backendGrade))
+             ? backendGrade
+             : studentAssessmentGrade(s);
+           const selectedTerm = document.getElementById('ewTermFilter')?.value || BINHS_DATA?.currentTerm || 'Term 1';
+           const currentTerm = selectedTerm.toString().startsWith('Term') ? Number(selectedTerm.replace(/\D/g, '')) : Number(selectedTerm);
+           const storedQ1 = Number(s.q1 || 0);
+           const storedQ2 = Number(s.q2 || 0);
+           const storedQ3 = Number(s.q3 || 0);
+           const storedQ4 = Number(s.q4 || 0);
+
+           const hasAssessmentData = AR_ASSESSMENTS.length > 0;
+           // A grade is valid only when a numeric grade is available.
+           // Backend computedGrade is preferred; local calculation is a fallback.
+           const gradeIsValid = grade !== null && Number.isFinite(grade) && s.riskLevel !== 'INSUFFICIENT_DATA';
+
+          // Risk evaluation uses Q1 weighted grade in ALL quarter fields so
+          // evaluateStudent() always reads a valid grade regardless of stored quarter
+          const evalStudent = { ...s, q1: grade, q2: grade, q3: grade, q4: grade, currentAverage: grade, averageGrade: grade };
+          const evaluation = AnalyticsEngine.evaluateStudent(evalStudent);
+
+          const q1Grade = (hasAssessmentData && currentTerm === 1) ? grade : (storedQ1 > 0 ? storedQ1 : (currentTerm === 1 ? grade : null));
+          const q2Grade = (hasAssessmentData && currentTerm === 2) ? grade : (storedQ2 > 0 ? storedQ2 : (currentTerm === 2 ? grade : null));
+          const q3Grade = (hasAssessmentData && currentTerm === 3) ? grade : (storedQ3 > 0 ? storedQ3 : (currentTerm === 3 ? grade : null));
+          const q4Grade = (hasAssessmentData && currentTerm === 4) ? grade : (storedQ4 > 0 ? storedQ4 : (currentTerm === 4 ? grade : null));
+
+          const fmtQuarter = (v) => v == null ? '--' : `${v.toFixed(1)}%`;
+
+          // Use server-authoritative classification when available; fall back to local evaluation.
+          // INSUFFICIENT_DATA takes precedence over any ML or rule-based result.
+          let riskLevel, riskLabel, riskReasons;
+          if (s.riskLevel === 'INSUFFICIENT_DATA' || !gradeIsValid) {
+            riskLevel = 'INSUFFICIENT_DATA';
+            riskLabel = 'INSUFFICIENT DATA';
+            riskReasons = s.riskReasons || ['Insufficient academic data — no assessment records available'];
+          } else if (s.riskLevel) {
+            riskLevel = s.riskLevel;
+            riskLabel = s.riskLabel;
+            riskReasons = s.riskReasons || evaluation.reasons;
+          } else {
+            riskLevel = evaluation.level;
+            riskLabel = evaluation.label;
+            riskReasons = evaluation.reasons;
+          }
+
+          return {
+            name: `${s.firstName} ${s.lastName}`,
+            lrn: s.lrn,
+            section: s.section,
+            q1: q1Grade !== null ? Number(q1Grade) : null,
+            q2: q2Grade !== null ? Number(q2Grade) : null,
+            q3: q3Grade !== null ? Number(q3Grade) : null,
+            q4: q4Grade !== null ? Number(q4Grade) : null,
+            currentAverage: grade,
+            averageGrade: grade,
+            grade: gradeIsValid ? grade : null,
+            abs: Number(s.absences || 0),
+            risk: riskLabel,
+            reasons: riskReasons,
+            q: [q1Grade, q2Grade, q3Grade, q4Grade].map(fmtQuarter),
+            current: grade,
+            highest: gradeIsValid ? Math.max(q1Grade || 0, q2Grade || 0, q3Grade || 0, q4Grade || 0, grade) : null,
+            days: DAYS_TOTAL,
+            present: Math.max(0, DAYS_TOTAL - Number(s.absences || 0)),
+            excused: 0,
+            evaluated: 'Just now',
+            level: riskLevel,
+            gradeIsValid: gradeIsValid,
+          };
+          });
+        }
+
+      // ===== LOAD ASSESSMENTS FROM DATABASE (matches Academic Records) =====
+     async function loadAssessments(requestedTerm) {
+       const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+       if (!session?.token || typeof fetch === 'undefined') return;
+
+       const term = requestedTerm || document.getElementById('ewTermFilter')?.value || BINHS_DATA?.currentTerm || 'Term 1';
+       const termKey = String(term).startsWith('Term') ? term : `Term ${term}`;
+
+       // Prevent duplicate concurrent loads for the same term.
+       if (assessmentLoadPromise && assessmentsLoadedTerm === termKey) {
+         return assessmentLoadPromise;
+       }
+       if (assessmentLoadPromise && assessmentsLoadedTerm !== termKey) {
+         // Wait for the previous request to finish before starting a new term load.
+         try { await assessmentLoadPromise; } catch (e) {}
+       }
+
+       const requestId = ++assessmentLoadRequestId;
+       const loadPromise = (async () => {
+         try {
+       // Clear stale assessment data before loading the selected term.
+       BINHS_DATA.assessmentScores = {};
+       AR_ASSESSMENTS.splice(0, AR_ASSESSMENTS.length);
+       assessmentsReady = false;
+
+           const sectionFilterVal = sectionFilterEl ? sectionFilterEl.value : 'all';
+           const sectionParam = sectionFilterVal === 'all' ? '' : sectionFilterVal;
+           const subject = Array.isArray(BINHS_DATA.subjects) && BINHS_DATA.subjects[0] ? BINHS_DATA.subjects[0] : 'General Mathematics';
+           const res = await fetch(`${window.location.origin}/api/assessments?section=${encodeURIComponent(sectionParam)}&subject=${encodeURIComponent(subject)}&quarter=${encodeURIComponent(termKey)}`, {
+             headers: { Authorization: `Bearer ${session.token}` }
+           });
+           if (requestId !== assessmentLoadRequestId) return; // stale response
+           if (!res.ok) return;
+           const result = await res.json();
+           if (requestId !== assessmentLoadRequestId) return; // stale response
+           if (!result.success || !Array.isArray(result.assessments)) return;
+
+           // Ignore stale term responses.
+           if (termKey !== (document.getElementById('ewTermFilter')?.value || BINHS_DATA?.currentTerm || termKey)) return;
+
+           AR_ASSESSMENTS.splice(0, AR_ASSESSMENTS.length, ...result.assessments);
+
+           await Promise.all(result.assessments.map(async (assessment) => {
+             const scoreRes = await fetch(`${window.location.origin}/api/assessments/${assessment.id}/scores`, {
+               headers: { Authorization: `Bearer ${session.token}` }
+             });
+             if (!scoreRes.ok) return;
+             const scoreResult = await scoreRes.json();
+             if (scoreResult.success && Array.isArray(scoreResult.scores)) {
+               scoreResult.scores.forEach(row => {
+                 BINHS_DATA.assessmentScores[`${row.lrn}:${assessment.id}`] = Number(row.score);
+               });
+             }
+           }));
+
+           if (requestId !== assessmentLoadRequestId) return; // stale response
+
+           assessmentsLoadedTerm = termKey;
+           assessmentsReady = true;
+           console.log('[Early Warning] Assessments loaded from database:', result.assessments.length, 'for', termKey);
+           tryRender();
+         } catch (e) {
+           console.info('[Early Warning] Could not load assessments from backend:', e.message);
+         } finally {
+           if (requestId === assessmentLoadRequestId) {
+             assessmentLoadPromise = null;
+           }
+         }
+       })();
+
+       assessmentLoadPromise = loadPromise;
+       return loadPromise;
+     }
+
+    // ===== POPULATE SECTION FILTER DYNAMICALLY FROM DATA =====
+    // Reads actual section names from imported student data (e.g. STEM Z, STEM A, etc.)
+    function populateSectionFilter() {
+      if (!sectionFilterEl) return;
+      const currentValue = sectionFilterEl.value;
+      let uniqueSections = [...new Set(students.map(s => s.section).filter(Boolean))].sort();
+      if (currentGradeLevel) {
+        uniqueSections = uniqueSections.filter(sec => sec.startsWith(currentGradeLevel + ' - '));
+      }
+
+      sectionFilterEl.innerHTML = '<option value="all" selected>All Sections</option>' +
+        uniqueSections.map(sec => `<option value="${escHtml(sec)}">${escHtml(sec)}</option>`).join('');
+      // Restore previous selection if it still exists, otherwise default to all
+      sectionFilterEl.value = uniqueSections.includes(currentValue) ? currentValue : 'all';
+      sectionFilter = sectionFilterEl.value;
+    }
+    function escHtml(unsafe) {
+      return String(unsafe).replace(/[&<>'"]/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[c]));
+    }
+
+    // =========================================================================
+    // GRADE LEVEL LOADING (database-driven via shared API)
+    // =========================================================================
+
+    async function fetchReportGradeLevels() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token || typeof fetch === 'undefined') return;
+      try {
+        const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+        const res = await fetch(`${apiBase}/api/students/grade-levels`, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return;
+        const result = await res.json();
+        if (!result.success || !Array.isArray(result.grade_levels)) return;
+
+        const gradeSelect = document.getElementById('ewGradeLevelFilter');
+        if (!gradeSelect) return;
+
+        gradeSelect.innerHTML = '<option value="" disabled selected>Select grade level</option>';
+        result.grade_levels.forEach(gl => {
+          const opt = new Option(gl, gl);
+          gradeSelect.add(opt);
+        });
+        gradeSelect.disabled = false;
+        gradeSelect.title = 'Grade levels from student records';
+
+        if (result.grade_levels.length === 1) {
+          gradeSelect.value = result.grade_levels[0];
+          currentGradeLevel = result.grade_levels[0];
+          await loadSectionsForGradeLevel(currentGradeLevel);
+        }
+        // Refresh section filter to respect the selected grade level
+        populateSectionFilter();
+      } catch (e) {
+        console.info('[Early Warning] Could not fetch grade levels:', e.message);
+      }
+    }
+
+    async function loadSectionsForGradeLevel(gradeLevel) {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token || typeof fetch === 'undefined') return;
+      currentGradeLevel = gradeLevel || '';
+
+      const secSelect = document.getElementById('ewSectionFilter');
+      if (!secSelect) return;
+
+      secSelect.innerHTML = '<option value="all" selected>All Sections</option>';
+      secSelect.disabled = true;
+
+      try {
+        const apiBase = window.BINHS_API_BASE_URL || window.location.origin;
+        const url = currentGradeLevel
+          ? `${apiBase}/api/students/sections?grade_level=${encodeURIComponent(currentGradeLevel)}`
+          : `${apiBase}/api/students/sections`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${session.token}` }
+        });
+        if (!res.ok) return;
+        const result = await res.json();
+        if (!result.success || !Array.isArray(result.sections)) return;
+
+        result.sections.forEach(r => {
+          const opt = new Option(`${r.section} (${r.student_count})`, r.section);
+          secSelect.add(opt);
+        });
+        secSelect.disabled = false;
+      } catch (e) {
+        console.info('[Early Warning] Could not load sections for grade level:', e.message);
+      }
+    }
+
+    const PAGE_SIZE = 8;
+    let page = 1;
+    let query = '';
+    let riskFilter = 'all';
+    let sectionFilter = 'all';
+    let currentGradeLevel = '';
+
+    const detailPanel = document.getElementById('detailPanel');
+    const tableBody  = document.getElementById('tableBody');
+    const tableCount = document.getElementById('tableCount');
+    const pager      = document.getElementById('pager');
+    const searchInput = document.getElementById('searchInput');
+    const sectionFilterEl = document.getElementById('ewSectionFilter');
+    const viewFilterEl    = document.getElementById('ewViewFilter');
+
+    populateSectionFilter();
+    (async () => { await fetchReportGradeLevels(); })();
+
+    (async () => {
+      await loadAcademicTermDates();
+      const termSelect = document.getElementById('ewTermFilter');
+      const savedTerm = localStorage.getItem('binhs_ew_selected_term');
+      const autoTerm = 'Term ' + (BINHS_DATA?.currentTerm || 1);
+      const validTerms = ['Term 1', 'Term 2', 'Term 3'];
+      const initialTerm = validTerms.includes(savedTerm) ? savedTerm : autoTerm;
+      if (termSelect) termSelect.value = initialTerm;
+      if (!validTerms.includes(savedTerm)) localStorage.setItem('binhs_ew_selected_term', initialTerm);
+      studentsReady = true;
+      await loadAssessments();
+      if (termSelect) termSelect.onchange = async () => {
+        localStorage.setItem('binhs_ew_selected_term', termSelect.value);
+        studentsReady = true;
+        await loadAssessments();
+      };
+    })();
+
+    const ICON = {
+      person: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+      eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+      msg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      bulb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>',
+      send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
+    };
+
+    const pct = (p, d) => ((p / d) * 100).toFixed(1);
+
+    // Lightweight toast for the early-warning workspace actions.
+    let ewToastTimer = null;
+    function ewToast(msg) {
+      let t = document.getElementById('ewToast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'ewToast';
+        t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#0F172A;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 12px 30px rgba(15,42,28,.3);border-left:4px solid #16A34A;transform:translateX(120%);transition:transform .28s ease;';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      requestAnimationFrame(() => { t.style.transform = 'none'; });
+      clearTimeout(ewToastTimer);
+      ewToastTimer = setTimeout(() => { t.style.transform = 'translateX(120%)'; }, 3000);
+    }
+
+    function getFiltered() {
+      const q = query.trim().toLowerCase();
+      let list = students.map((s, i) => ({ s, i }));
+      if (riskFilter !== 'all') list = list.filter(o => o.s.risk === riskFilter);
+      if (currentGradeLevel) {
+        list = list.filter(o => o.s.section.startsWith(currentGradeLevel + ' - '));
+      }
+      if (sectionFilter !== 'all') {
+        list = list.filter(o => o.s.section === sectionFilter);
+      }
+      if (!q) return list;
+      return list.filter(o => o.s.name.toLowerCase().includes(q) || o.s.lrn.includes(q));
+    }
+
+    function renderTable() {
+      const filtered = getFiltered();
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (page > totalPages) page = totalPages;
+      const start = (page - 1) * PAGE_SIZE;
+      const items = filtered.slice(start, start + PAGE_SIZE);
+
+      tableBody.innerHTML = items.map(o => {
+        const s = o.s;
+        const gradeBad = s.gradeIsValid && s.grade < 75;
+        const absBad = s.abs >= 3;
+        const gradeDisplay = s.gradeIsValid ? s.grade.toFixed(1) : '--';
+        const badge = s.risk === 'AT-RISK' ? 'risk' : s.risk === 'MONITOR' ? 'monitor' : s.risk === 'INSUFFICIENT DATA' ? 'muted' : 'ok';
+        return `<tr data-idx="${o.i}">
+          <td><input type="checkbox" aria-label="Select ${escapeHtml(s.name)}"></td>
+          <td class="col-num">${o.i + 1}</td>
+          <td><div class="name-cell"><div class="row-avatar">${ICON.person}</div><b>${escapeHtml(s.name)}</b></div></td>
+          <td class="lrn">${escapeHtml(s.lrn)}</td>
+          <td class="grade ${gradeBad ? 'bad' : 'ok'}">${gradeDisplay}</td>
+          <td class="abs ${absBad ? 'bad' : 'ok'}">${s.abs}</td>
+          <td><span class="badge ${badge}">${escapeHtml(s.risk)}</span></td>
+          <td><ul class="reasons">${s.reasons.map(r => '<li>' + escapeHtml(r) + '</li>').join('')}</ul></td>
+          <td><div class="actions">
+            <button class="act-btn" data-act="view" aria-label="View profile">${ICON.eye}</button>
+            <button class="act-btn" data-act="notify" aria-label="Notify parent">${ICON.msg}</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+
+      tableCount.textContent = filtered.length
+        ? `Showing ${start + 1} to ${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length} students`
+        : 'No students found';
+
+      let phtml = `<button data-page="prev" ${page === 1 ? 'disabled' : ''}>&lsaquo;</button>`;
+      for (let p = 1; p <= totalPages; p++) {
+        phtml += `<button data-page="${p}" class="${p === page ? 'active' : ''}">${p}</button>`;
+      }
+      phtml += `<button data-page="next" ${page === totalPages ? 'disabled' : ''}>&rsaquo;</button>`;
+      pager.innerHTML = phtml;
+
+      tableBody.querySelectorAll('tr').forEach(tr => {
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('input')) return;
+          const idx = Number(tr.getAttribute('data-idx'));
+          const actBtn = e.target.closest('.act-btn');
+          if (actBtn) {
+            e.stopPropagation();
+            const student = students[idx];
+            if (!student) return;
+            if (actBtn.getAttribute('data-act') === 'view') {
+              window.location.href = 'student.html?lrn=' + encodeURIComponent(student.lrn);
+            } else if (actBtn.getAttribute('data-act') === 'notify') {
+              window.location.href = 'student.html?lrn=' + encodeURIComponent(student.lrn) + '&sms=1';
+            }
+            return;
+          }
+          selectStudent(idx);
+        });
+      });
+    }
+
+    function renderDetail(s) {
+      const gradeBad = s.gradeIsValid && s.grade < 75;
+      const absBad = s.abs >= 3;
+      const badge = s.risk === 'AT-RISK' ? 'risk' : s.risk === 'MONITOR' ? 'monitor' : s.risk === 'INSUFFICIENT DATA' ? 'muted' : 'ok';
+
+      const bullets = [];
+      if (!s.gradeIsValid) {
+        bullets.push(`<li><span><b>Average Grade:</b> -- (Insufficient academic data — no assessment records available)</span></li>`);
+      } else if (gradeBad) {
+        bullets.push(`<li><span><b>Average Grade:</b> ${s.grade.toFixed(1)}% (Below 75%)</span></li>`);
+      }
+      if (absBad) bullets.push(`<li><span><b>Unexcused Absences:</b> ${s.abs} (Threshold: 3)</span></li>`);
+      if (!bullets.length) bullets.push(`<li><span><b>Current Average:</b> ${s.current.toFixed(1)}%</span></li>`);
+
+      const presentPct = pct(s.present, s.days);
+
+      const isInsufficient = s.risk === 'INSUFFICIENT DATA';
+
+      detailPanel.innerHTML = `
+        <button class="detail-close" aria-label="Close panel">${ICON.x}</button>
+        <div class="detail-head">
+          <div class="detail-avatar">${ICON.person}</div>
+          <div style="flex:1">
+            <div class="dh-top"><h3>${escapeHtml(s.name)}</h3><span class="badge ${badge}">${escapeHtml(s.risk)}</span></div>
+            ${s.ruleBased ? '<div style="margin-top:4px;font-size:11px;color:#64748B;font-weight:600">School Rule: ' + escapeHtml(s.ruleBased.label || '') + '</div>' : ''}
+            <small>LRN: ${escapeHtml(s.lrn)}</small>
+            <div class="sect">${ICON.book} ${escapeHtml(s.section || 'Grade 12 - STEM A')}</div>
+          </div>
+        </div>
+
+        <div class="d-sec">
+          <h4 class="risk-title">${ICON.warn} Risk Summary</h4>
+          <p class="intro">${isInsufficient
+            ? 'This student cannot be classified due to missing academic data.'
+            : s.risk === 'AT-RISK'
+              ? 'This student is at risk based on the following:'
+              : 'This student requires monitoring based on the following:'}</p>
+          <ul class="bullets">${bullets.join('')}</ul>
+          <div class="last-eval">${ICON.clock} Last evaluated: ${s.evaluated}</div>
+        </div>
+
+        <div class="d-sec">
+          <h4>Academic Overview</h4>
+          <div class="qrow">
+  <div>Term 1<b>${s.q[0]}</b></div>
+  <div>Term 2<b>${s.q[1]}</b></div>
+  <div>Term 3<b>${s.q[2]}</b></div>
+  <div>Legacy Q4<b>${s.q[3]}</b></div>
+          </div>
+          <div class="metrics3">
+            <div><small>Current Average</small><b class="${gradeBad ? 'danger' : ''}">${s.gradeIsValid ? s.current.toFixed(1) + '%' : '--'}</b></div>
+            <div><small>Passing Threshold</small><b>75%</b></div>
+            <div><small>Highest Score</small><b>${s.gradeIsValid ? s.highest.toFixed(1) + '%' : '--'}</b></div>
+          </div>
+        </div>
+
+        <div class="d-sec tight">
+          <h4>Attendance Overview</h4>
+          <div class="metrics4">
+            <div><small>Total School Days</small><b>${s.days}</b></div>
+            <div><small>Present</small><b class="success">${s.present} <em>(${presentPct}%)</em></b></div>
+            <div><small>Unexcused Absences</small><b class="danger">${s.abs}</b></div>
+            <div><small>Excused Absences</small><b>${s.excused}</b></div>
+          </div>
+        </div>
+
+        <div class="recommend">
+          <h5>${ICON.bulb} Recommended Action</h5>
+          <p>${isInsufficient
+            ? 'Unable to determine risk — please ensure assessment data is available for this student.'
+            : s.risk === 'AT-RISK'
+              ? 'Consider intervention and notify the parent/guardian.'
+              : 'Monitor closely and schedule an advising session with the student.'}</p>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn btn-ghost" id="ewViewProfile">${ICON.person} View Full Profile</button>
+          <button class="btn btn-primary" id="ewNotifyParent">${ICON.send} Notify Parent</button>
+        </div>`;
+
+      detailPanel.querySelector('.detail-close').addEventListener('click', clearSelection);
+      // Wire the action buttons for the selected student.
+      const vp = detailPanel.querySelector('#ewViewProfile');
+      const np = detailPanel.querySelector('#ewNotifyParent');
+      if (vp) vp.onclick = () => { window.location.href = 'student.html?lrn=' + encodeURIComponent(s.lrn); };
+      if (np) np.onclick = () => { window.location.href = 'student.html?lrn=' + encodeURIComponent(s.lrn) + '&sms=1'; };
+    }
+
+    function selectStudent(index) {
+      const s = students[index];
+      if (!s) return;
+      renderDetail(s);
+      tableBody.querySelectorAll('tr').forEach(tr => {
+        tr.classList.toggle('selected', Number(tr.getAttribute('data-idx')) === index);
+      });
+    }
+
+    function clearSelection() {
+      detailPanel.innerHTML =
+        '<div style="padding:48px 24px;text-align:center;color:var(--muted);font-size:13px">' +
+        'Select a student to view their early-warning details.</div>';
+      tableBody.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected'));
+    }
+
+    pager.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-page]');
+      if (!btn || btn.disabled) return;
+      const val = btn.getAttribute('data-page');
+      if (val === 'prev') page--;
+      else if (val === 'next') page++;
+      else page = Number(val);
+      renderTable();
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      query = e.target.value;
+      page = 1;
+      renderTable();
+      updateStatCards();
+    });
+
+    // ===== SECTION FILTER =====
+    if (sectionFilterEl) {
+      sectionFilterEl.addEventListener('change', (e) => {
+        sectionFilter = e.target.value;
+        page = 1;
+        renderTable();
+        updateStatCards();
+      });
+    }
+
+    // ===== GRADE LEVEL FILTER =====
+    const gradeLevelFilterEl = document.getElementById('ewGradeLevelFilter');
+    if (gradeLevelFilterEl) {
+      gradeLevelFilterEl.addEventListener('change', async (e) => {
+        await loadSectionsForGradeLevel(e.target.value);
+        sectionFilterEl.value = 'all';
+        sectionFilter = 'all';
+        page = 1;
+        renderTable();
+        updateStatCards();
+      });
+    }
+
+    // ===== VIEW / RISK FILTER =====
+    if (viewFilterEl) {
+      viewFilterEl.addEventListener('change', (e) => {
+        riskFilter = e.target.value;
+        page = 1;
+        renderTable();
+        updateStatCards();
+      });
+    }
+
+    // ===== FILTER BUTTON (cycles risk-level filter) =====
+    const ewFilterBtn = document.getElementById('ewFilterBtn');
+    if (ewFilterBtn) {
+      ewFilterBtn.addEventListener('click', () => {
+        riskFilter = riskFilter === 'all' ? 'AT-RISK' : riskFilter === 'AT-RISK' ? 'MONITOR' : 'all';
+        page = 1;
+        renderTable();
+        updateStatCards();
+        const label = riskFilter === 'all' ? 'All students' : riskFilter === 'AT-RISK' ? 'At-Risk only' : 'Monitoring only';
+        ewToast('Filter: ' + label);
+      });
+    }
+
+    // ===== EXPORT LIST (CSV) =====
+    const ewExportBtn = document.getElementById('ewExportBtn');
+    if (ewExportBtn) {
+      ewExportBtn.addEventListener('click', () => {
+        const rows = getFiltered().map(o => o.s);
+        const header = ['#', 'Student Name', 'LRN', 'Average Grade', 'Unexcused Absences', 'Risk Level', 'Reasons'];
+        const csv = [header].concat(rows.map((s, i) => [
+          i + 1, s.name, s.lrn, s.gradeIsValid ? s.grade.toFixed(1) + '%' : '--', s.abs, s.risk, s.reasons.join('; ')
+        ])).map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'BINHS_Early_Warning_List.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        ewToast('Early warning list exported.');
+      });
+    }
+
+    // ==================== NOTIFICATIONS (shared module) ====================
+    BINHS_Notifications.init({
+      bellBtnId: 'ewBellBtn',
+      dropdownId: 'ewNotifDropdown',
+      badgeId: 'ewBellBadge',
+      badgePillId: 'ewNotifBadgePill',
+      listId: 'ewNotifDropdownList',
+      onNotificationClick: (logId, notification) => {
+        BINHS_Notifications.markAsRead(logId);
+        window.location.href = 'academic-records.html';
+      }
+    });
+
+    // Initial paint
+    (async () => {
+      await buildStudentsList();
+      renderTable();
+      selectStudent(0);
+    })();
+
+    // ===== LIVE USER (from session) =====
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null') || { name: 'Roldan R. Arreza', role: 'Teacher' };
+    const roleTitle = currentUser.role === 'Admin' ? 'System Administrator' : 'Teacher / Advisor';
+    const assignedSections = Array.isArray(currentUser.sections) ? currentUser.sections.filter(Boolean) : [];
+    const sectionLabel = currentUser.role === 'Admin' ? 'All SHS Sections' : (assignedSections.length ? `${assignedSections.join(', ')} Adviser` : 'No section assigned');
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    setText('sidebarUserName', currentUser.name);
+    setText('sidebarUserRole', roleTitle);
+    setText('sidebarUserSection', sectionLabel);
+    setText('ewTopUserName', currentUser.name);
+    setText('ewTopUserRole', roleTitle);
+    if (currentUser.role === 'Admin') {
+      const adminMenu = document.getElementById('adminMenuSection');
+      if (adminMenu) adminMenu.style.display = 'block';
+    }
+
+    // ===== SUMMARY STAT CARDS (live) =====
+    function updateStatCards() {
+      const filtered = getFiltered().map(o => o.s);
+      const total = filtered.length;
+      let atRiskCount = 0;
+      let moderateCount = 0;
+      let lowCount = 0;
+      let insufficientCount = 0;
+      let totalGradeSum = 0;
+      let gradeCount = 0;
+
+      filtered.forEach(student => {
+        if (student.level === 'INSUFFICIENT_DATA') {
+          insufficientCount++;
+        } else if (student.level === 'HIGH') {
+          atRiskCount++;
+          if (student.gradeIsValid) { totalGradeSum += student.grade; gradeCount++; }
+        } else if (student.level === 'MODERATE') {
+          moderateCount++;
+          if (student.gradeIsValid) { totalGradeSum += student.grade; gradeCount++; }
+        } else {
+          lowCount++;
+          if (student.gradeIsValid) { totalGradeSum += student.grade; gradeCount++; }
+        }
+      });
+
+      const averageGrade = gradeCount > 0 ? (totalGradeSum / gradeCount).toFixed(1) : 'N/A';
+      const atRiskPct = total > 0 ? ((atRiskCount / total) * 100).toFixed(1) : '0';
+      const moderatePct = total > 0 ? ((moderateCount / total) * 100).toFixed(1) : '0';
+      const lowPct = total > 0 ? ((lowCount / total) * 100).toFixed(1) : '0';
+
+      const setNum = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+      const setBar = (id, value) => { const el = document.getElementById(id); if (el) el.style.width = `${value}%`; };
+      setNum('ewAtRiskNum', atRiskCount);
+      setNum('ewAtRiskSub', `${atRiskPct}% of ${total} students`);
+      setBar('ewAtRiskBar', atRiskPct);
+      setNum('ewMonitorNum', moderateCount);
+      setNum('ewMonitorSub', `${moderatePct}% of ${total} students`);
+      setBar('ewMonitorBar', moderatePct);
+      setNum('ewLowNum', lowCount);
+      setNum('ewLowSub', `${lowPct}% of ${total} students`);
+      setBar('ewLowBar', lowPct);
+      setNum('ewInsufficientNum', insufficientCount);
+      setNum('ewInsufficientSub', `${total > 0 ? ((insufficientCount / total) * 100).toFixed(1) : '0'}% of ${total} students`);
+      setNum('ewAvgNum', averageGrade);
+    }
+    // Auto-refresh when live Decision Tree inferences arrive from backend
+    window.addEventListener('binhs_data_synced', () => {
+      studentsReady = true;
+      tryRender();
+      console.log('[Early Warning UI] Successfully refreshed with live Decision Tree predictions!');
+    });
+
+    const settingsBtn = document.getElementById('btnAccountSettings');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', function () {
+        alert('Signed in as ' + currentUser.name + ' (' + roleTitle + ')');
+      });
+    }
+
+    const logoutBtn = document.getElementById('btnLogout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function () {
+        sessionStorage.removeItem('binhs_user');
+        location.href = 'index.html';
+      });
+    }
+
+    // If students already available from localStorage cache, mark ready now
+    if (typeof BINHS_DATA !== 'undefined' && BINHS_DATA.students && BINHS_DATA.students.length > 0) {
+      studentsReady = true;
+      tryRender();
+    }
+  </script>
+</body>
+</html>
+
+

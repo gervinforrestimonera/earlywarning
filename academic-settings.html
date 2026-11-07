@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | Academic Settings</title>
+  <meta name="description" content="Manage the academic calendar and grading period configuration.">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/reports.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <script src="js/admin-sidebar.js"></script>
+
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div>
+            <h1 class="page-title">Academic Settings</h1>
+            <p class="page-subtitle">Manage the academic calendar and grading period configuration for the school year.</p>
+          </div>
+        </div>
+      </header>
+
+      <div class="reports-page-container">
+        <section class="reports-filter-bar" aria-label="Active Academic Term" style="margin-bottom:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <div>
+              <strong>Active Academic Term</strong>
+              <div id="activeTermStatus" style="font-size:12px; color:#64748B;">Loading...</div>
+            </div>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <label for="activeTermSelect">Active Term</label>
+            <select id="activeTermSelect" class="filter-select">
+              <option value="1">Term 1</option>
+              <option value="2">Term 2</option>
+              <option value="3">Term 3</option>
+            </select>
+            <button type="button" class="btn-primary" id="btnSaveActiveTerm">Save Active Term</button>
+          </div>
+          <div id="activeTermMessage" style="margin-top:8px; font-size:12px;"></div>
+        </section>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <div>
+              <strong>Academic Term Dates</strong>
+              <div id="termDatesStatus" style="font-size:12px; color:#64748B;">Loading...</div>
+            </div>
+            <button type="button" class="btn-secondary" id="btnEditTermDates">Edit Academic Term Dates</button>
+          </div>
+          <div id="termDatesEditor" style="display:none; margin-top:16px;">
+            <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px;">
+              <div style="border:1px solid #E5E7EB; border-radius:12px; padding:12px;">
+                <div style="font-weight:700; margin-bottom:8px;">Term 1</div>
+                <div class="filter-group"><label for="term1Start">Start Date</label><input type="date" id="term1Start" class="filter-select"></div>
+                <div class="filter-group" style="margin-top:8px;"><label for="term1End">End Date</label><input type="date" id="term1End" class="filter-select"></div>
+              </div>
+              <div style="border:1px solid #E5E7EB; border-radius:12px; padding:12px;">
+                <div style="font-weight:700; margin-bottom:8px;">Term 2</div>
+                <div class="filter-group"><label for="term2Start">Start Date</label><input type="date" id="term2Start" class="filter-select"></div>
+                <div class="filter-group" style="margin-top:8px;"><label for="term2End">End Date</label><input type="date" id="term2End" class="filter-select"></div>
+              </div>
+              <div style="border:1px solid #E5E7EB; border-radius:12px; padding:12px;">
+                <div style="font-weight:700; margin-bottom:8px;">Term 3</div>
+                <div class="filter-group"><label for="term3Start">Start Date</label><input type="date" id="term3Start" class="filter-select"></div>
+                <div class="filter-group" style="margin-top:8px;"><label for="term3End">End Date</label><input type="date" id="term3End" class="filter-select"></div>
+              </div>
+            </div>
+            <div id="termDatesMessage" style="margin-top:8px; font-size:12px;"></div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+              <button type="button" class="btn-primary" id="btnSaveTermDates">Save Changes</button>
+              <button type="button" class="btn-secondary" id="btnCancelTermDates">Cancel</button>
+            </div>
+          </div>
+          <div id="termDatesSummary" style="margin-top:8px; font-size:12px;"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!currentUser || !currentUser.token) {
+      window.location.href = 'index.html';
+    }
+    const isAdmin = !!(currentUser && currentUser.role === 'Admin');
+    if (currentUser) {
+      const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setT('topUserName', currentUser.name);
+      setT('sidebarUserName', currentUser.name);
+      setT('sidebarUserRole', isAdmin ? 'System Administrator' : 'Teacher / Advisor');
+      if (isAdmin && document.getElementById('adminMenuSection')) {
+        document.getElementById('adminMenuSection').style.display = 'block';
+      }
+    }
+
+    async function loadActiveTerm() {
+      try {
+        const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+        if (!session?.token) return;
+        const res = await fetch(window.location.origin + '/api/active-academic-term', { headers: { Authorization: 'Bearer ' + session.token } });
+        if (!res.ok) return;
+        const result = await res.json();
+        const status = document.getElementById('activeTermStatus');
+        if (result.configured && result.term) {
+          document.getElementById('activeTermSelect').value = String(result.term);
+          if (status) status.textContent = 'Configured: Term ' + result.term;
+        } else {
+          document.getElementById('activeTermSelect').value = '1';
+          if (status) status.textContent = 'Not configured. Defaulting to Term 1.';
+        }
+      } catch (e) { console.info('Active term load failed:', e.message); }
+    }
+    async function saveActiveTerm() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token) return;
+      const term = Number(document.getElementById('activeTermSelect').value);
+      const msg = document.getElementById('activeTermMessage');
+      try {
+        const res = await fetch(window.location.origin + '/api/active-academic-term', { method: 'PUT', headers: { Authorization: 'Bearer ' + session.token, 'Content-Type': 'application/json' }, body: JSON.stringify({ term }) });
+        const result = await res.json();
+        if (!res.ok) { if (msg) msg.textContent = result.message || 'Save failed.'; return; }
+        if (msg) msg.textContent = 'Saved.';
+        await loadActiveTerm();
+        await loadTermDates();
+      } catch (e) { if (msg) msg.textContent = e.message; }
+    }
+
+    async function loadTermDates() {
+      try {
+        const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+        if (!session?.token) return;
+        const res = await fetch(window.location.origin + '/api/academic-term-dates', { headers: { Authorization: 'Bearer ' + session.token } });
+        if (!res.ok) return;
+        const result = await res.json();
+        const status = document.getElementById('termDatesStatus');
+        const summary = document.getElementById('termDatesSummary');
+        if (!result.configured || !result.dates) {
+          if (status) status.textContent = 'Academic term dates are not configured.';
+          if (summary) summary.textContent = '';
+          return;
+        }
+        const d = result.dates;
+        document.getElementById('term1Start').value = d.term1.start;
+        document.getElementById('term1End').value = d.term1.end;
+        document.getElementById('term2Start').value = d.term2.start;
+        document.getElementById('term2End').value = d.term2.end;
+        document.getElementById('term3Start').value = d.term3.start;
+        document.getElementById('term3End').value = d.term3.end;
+        if (status) status.textContent = 'Configured.';
+        if (summary) summary.textContent = 'Term 1: ' + d.term1.start + ' to ' + d.term1.end + ' | Term 2: ' + d.term2.start + ' to ' + d.term2.end + ' | Term 3: ' + d.term3.start + ' to ' + d.term3.end;
+      } catch (e) { console.info('Term dates load failed:', e.message); }
+    }
+
+    async function saveTermDates() {
+      const session = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+      if (!session?.token) return;
+      const dates = {
+        term1: { start: document.getElementById('term1Start').value, end: document.getElementById('term1End').value },
+        term2: { start: document.getElementById('term2Start').value, end: document.getElementById('term2End').value },
+        term3: { start: document.getElementById('term3Start').value, end: document.getElementById('term3End').value }
+      };
+      const msg = document.getElementById('termDatesMessage');
+      try {
+        const res = await fetch(window.location.origin + '/api/academic-term-dates', { method: 'PUT', headers: { Authorization: 'Bearer ' + session.token, 'Content-Type': 'application/json' }, body: JSON.stringify({ dates }) });
+        const result = await res.json();
+        if (!res.ok) { if (msg) msg.textContent = result.message || 'Save failed.'; return; }
+        if (msg) msg.textContent = 'Saved.';
+        document.getElementById('termDatesEditor').style.display = 'none';
+        await loadTermDates();
+      } catch (e) { if (msg) msg.textContent = e.message; }
+    }
+
+    const editBtn = document.getElementById('btnEditTermDates');
+    if (editBtn) editBtn.onclick = () => { document.getElementById('termDatesEditor').style.display = 'block'; };
+    const saveBtn = document.getElementById('btnSaveTermDates');
+    if (saveBtn) saveBtn.onclick = saveTermDates;
+    const cancelBtn = document.getElementById('btnCancelTermDates');
+    if (cancelBtn) cancelBtn.onclick = () => { document.getElementById('termDatesEditor').style.display = 'none'; };
+    const saveActiveBtn = document.getElementById('btnSaveActiveTerm');
+    if (saveActiveBtn) saveActiveBtn.onclick = saveActiveTerm;
+
+    (async () => {
+      await loadActiveTerm();
+      await loadTermDates();
+    })();
+  </script>
+</body>
+</html>

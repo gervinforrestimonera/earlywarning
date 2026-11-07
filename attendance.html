@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINHS | Attendance Monitoring</title>
+  <meta name="description" content="Track student absences and identify behavioral patterns for imported student sections.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <script>
+    const _user = JSON.parse(sessionStorage.getItem('binhs_user') || 'null');
+    if (!_user) window.location.href = 'index.html';
+    
+    // Initialize BINHS_DATA with seed data fallback if not already loaded
+    // This MUST run after data-secure.js has loaded and called loadStoredData()
+    // But we need to ensure localStorage data takes priority over API data
+    if (typeof BINHS_DATA === 'undefined') {
+      BINHS_DATA = {
+        currentUser: _user,
+        students: [],
+        users: [],
+        notificationLogs: [],
+        gatewayConfig: { senderName: 'BINHS_ALERT', mode: 'simulation' }
+      };
+      // Restore from localStorage if available
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('BINHS_STORE_V1');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed.students)) {
+              const seen = new Set();
+              BINHS_DATA.students = parsed.students.filter(s => {
+                if (seen.has(s.lrn)) return false;
+                seen.add(s.lrn);
+                return true;
+              });
+            }
+          } catch (e) {
+            console.warn('Could not parse stored data', e);
+          }
+        }
+      }
+    } else {
+      // BINHS_DATA already exists from data-secure.js
+      // Ensure students from localStorage are preserved if not already populated
+      if (BINHS_DATA.students.length === 0 && typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('BINHS_STORE_V1');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed.students)) {
+              const seen = new Set();
+              BINHS_DATA.students = parsed.students.filter(s => {
+                if (seen.has(s.lrn)) return false;
+                seen.add(s.lrn);
+                return true;
+              });
+            }
+          } catch (e) {
+            console.warn('Could not parse stored data', e);
+          }
+        }
+      }
+    }
+  </script>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="school-logo-badge">
+          <svg class="school-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 8L15 22V52C15 72 30 89 50 95C70 89 85 72 85 52V22L50 8Z" fill="#166534" stroke="#F59E0B" stroke-width="3"/>
+            <path d="M50 14L21 26V50C21 67 33 82 50 88C67 82 79 67 79 50V26L50 14Z" fill="#123524"/>
+            <path d="M30 65C40 60 48 61 50 63C52 61 60 60 70 65C62 55 55 55 50 58C45 55 38 55 30 65Z" fill="#F59E0B"/>
+            <circle cx="50" cy="38" r="9" fill="#F59E0B"/>
+            <path d="M48 24H52V35H48V24Z" fill="#E2E8F0"/>
+            <path d="M43 45L57 45L54 55L46 55Z" fill="#22C55E"/>
+            <circle cx="34" cy="33" r="2.5" fill="#F59E0B"/>
+            <circle cx="66" cy="33" r="2.5" fill="#F59E0B"/>
+            <circle cx="50" cy="22" r="2.5" fill="#F59E0B"/>
+          </svg>
+        </div>
+        <div class="brand-text"><div class="brand-title">BINHS</div><div class="brand-subtitle">Early Warning System</div></div>
+      </div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Dashboard</span></a>
+        <a href="student.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Students</span></a>
+        <a href="academic-records.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h8"/><path d="M8 18h5"/></svg><span>Academic Records</span></a>
+        <a href="attendance.html" class="nav-item active" aria-current="page"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Attendance</span></a>
+        <a href="early-warning.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Early Warning</span></a>
+         <a href="reports.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Reports</span></a>
+         <a href="academic-settings.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Academic Settings</span></a>
+        <div class="admin-menu-section" id="adminMenuSection" style="display:none;">
+          <div class="menu-divider">ADMIN CONTROLS</div>
+          <a href="user-management.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg><span>Manage Users</span></a>
+          <a href="sms-logs.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="13" y2="14"/></svg><span>SMS Gateway Logs</span></a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="current-user-card">
+          <div class="user-avatar-circle"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+          <div class="user-info-text">
+            <div class="user-name" id="sidebarUserName">Roldan R. Arreza</div>
+            <div class="user-role" id="sidebarUserRole">Teacher / Advisor</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button class="footer-btn logout-btn" id="btnLogout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Logout</span></button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+          <div>
+            <h1 class="page-title">Attendance Monitoring</h1>
+            <p class="page-subtitle">Track student absences and identify behavioral patterns.</p>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <!-- Notifications -->
+          <div class="notification-wrapper">
+            <button class="icon-btn" id="attBellBtn" title="System Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="badge-count" id="attBellBadge" hidden>0</span>
+            </button>
+            <div class="notification-dropdown" id="attNotifDropdown">
+              <div class="dropdown-header">
+                <strong>Alerts & Early Warnings</strong>
+                <span class="badge-pill" id="attNotifBadgePill">0</span>
+              </div>
+              <div class="dropdown-list" id="attNotifDropdownList">
+              </div>
+            </div>
+          </div>
+          <div class="user-menu-wrapper">
+            <button class="top-user-pill" id="btnTopUserMenu" type="button">
+              <div class="top-user-avatar-wrapper"><div class="top-user-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><span class="top-user-status-dot"></span></div>
+              <div class="top-user-details"><span class="top-user-name" id="topUserName">Roldan R. Arreza</span><span class="top-user-role" id="topUserRole">Teacher / Advisor</span></div>
+              <svg class="top-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="user-dropdown-menu" id="userProfileDropdown">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <div class="user-dropdown-info"><strong class="user-dropdown-name" id="dropdownUserName">Roldan R. Arreza</strong><span class="user-dropdown-role" id="dropdownUserRole">Teacher / Advisor</span></div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <div class="user-dropdown-actions">
+                <button class="user-dropdown-item logout-item" id="topBtnLogout" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign Out</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-container">
+        <!-- Filter Bar -->
+        <section class="attendance-filter-bar" aria-label="Attendance filters">
+          <label>School Year<select class="attendance-field" id="attendanceSchoolYear" disabled><option>No roster yet</option></select></label>
+          <label>Grade Level<select class="attendance-field" id="attendanceGradeLevel" disabled><option>No roster yet</option></select></label>
+          <label>Section<select class="attendance-field" id="attendanceSection" disabled><option>No section yet</option></select></label>
+          <label>Date<input class="attendance-field attendance-date" id="attendanceDate" type="date"></label>
+          <label>Period / Subject <span>(Optional)</span><select class="attendance-field" id="attendanceSubject"><option>All Subjects</option><option>General Mathematics</option><option>Statistics and Probability</option><option>Pre-Calculus</option><option>Basic Calculus</option><option>General Biology</option><option>General Chemistry</option><option>General Physics</option><option>Earth and Life Science</option><option>Disaster Readiness and Risk Reduction</option><option>Practical Research</option></select></label>
+          <button class="btn btn-primary attendance-save-top" id="btnSaveAttendanceTop" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save Attendance</span>
+          </button>
+        </section>
+
+        <div class="attendance-workspace">
+          <!-- Roster Table Card -->
+          <section class="attendance-roster-card">
+            <div class="attendance-card-header">
+              <div>
+                <h2 id="attendanceRosterTitle">Attendance Roster</h2>
+                <p id="attendanceRosterSection">Import students to begin.</p>
+              </div>
+              <button class="btn btn-secondary attendance-mark-all" id="btnMarkAllPresent" type="button" disabled>Mark All Present</button>
+            </div>
+            <div class="attendance-table-scroll">
+              <table class="attendance-roster-table">
+                <thead>
+                  <tr>
+                    <th>#</th><th>LRN</th><th>Student Name</th><th>Status</th><th>Absence Type (if absent)</th><th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Side Panel -->
+          <aside class="attendance-side-panel">
+            <section class="attendance-side-card">
+              <h3 id="attendanceSummaryTitle">Attendance Summary</h3>
+              <div class="attendance-summary-grid">
+                <div class="attendance-stat present"><span>Present</span><strong id="attPresentCount">0</strong><small id="attPresentPercent">0%</small></div>
+                <div class="attendance-stat absent"><span>Absent</span><strong id="attAbsentCount">0</strong><small id="attAbsentPercent">0%</small></div>
+                <div class="attendance-stat late"><span>Late</span><strong id="attLateCount">0</strong><small id="attLatePercent">0%</small></div>
+                <div class="attendance-stat total"><span>Total</span><strong id="attTotalCount">0</strong><small>100%</small></div>
+              </div>
+            </section>
+
+            <section class="attendance-side-card attendance-legend-card">
+              <h3>Legend</h3>
+              <div class="attendance-legend-row"><i class="present-dot"></i><b>Present</b><span>Student is present in class</span></div>
+              <div class="attendance-legend-row"><i class="absent-dot"></i><b>Absent</b><span>Student is not present</span></div>
+              <div class="attendance-legend-row"><i class="late-dot"></i><b>Late</b><span>Student arrived late</span></div>
+              <div class="attendance-legend-row detail"><b>Excused Absence</b><span>Absence with a valid reason</span></div>
+              <div class="attendance-legend-row detail"><b>Unexcused Absence</b><span>Absence without a valid reason</span></div>
+            </section>
+
+            <section class="attendance-side-card absent-students-card">
+              <h3>Absent Students <span id="attAbsentLabel">(0)</span></h3>
+              <div id="absentStudentsList" class="absent-students-list"></div>
+            </section>
+          </aside>
+        </div>
+
+        <!-- Bottom Bar -->
+        <section class="attendance-bottom-bar">
+          <div class="attendance-note">
+            <span class="attendance-note-icon">i</span>
+            <div><strong>Please ensure all attendance records are accurate before saving.</strong><p>Saved records remain available for attendance history and corrections.</p></div>
+          </div>
+          <div class="attendance-bottom-actions">
+            <button class="btn btn-secondary" id="btnCancelAttendance" type="button" disabled>Cancel</button>
+            <button class="btn btn-primary" id="btnSaveAttendanceBottom" type="button" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Save Attendance</span>
+            </button>
+            <span id="attendancePendingSync" class="pending-sync-indicator" title="Unsynced changes" style="display:none;">● Pending</span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/data-secure.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    // ===== AUTH =====
+    const currentUser = JSON.parse(sessionStorage.getItem('binhs_user') || 'null') || { name: 'Roldan R. Arreza', role: 'Teacher' };
+    ['sidebarUserName','topUserName','dropdownUserName'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = currentUser.name; });
+    ['sidebarUserRole','topUserRole','dropdownUserRole'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = currentUser.role === 'Admin' ? 'System Administrator' : 'Teacher / Advisor'; });
+    if (currentUser.role === 'Admin') document.getElementById('adminMenuSection').style.display = 'block';
+
+    // ===== SIDEBAR / DROPDOWN =====
+    document.getElementById('mobileMenuBtn').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+    const userBtn = document.getElementById('btnTopUserMenu');
+    const userDropdown = document.getElementById('userProfileDropdown');
+    userBtn.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle('show'); };
+    document.addEventListener('click', () => userDropdown.classList.remove('show'));
+
+    // ===== SUBJECT ATTENDANCE HANDLER =====
+    // When subject changes, switch to that subject's session for the current date/section.
+    document.getElementById('attendanceSubject').onchange = (e) => {
+      const selectedSubject = e.target.value;
+      currentSubject = selectedSubject === 'All Subjects' ? 'All Subjects' : selectedSubject;
+      currentSession = getCurrentSessionKey();
+      currentHasAssessmentSession = false; // Reset until loadAttendanceFromServer confirms
+      renderAttendance();
+    };
+
+    // ===== LOGOUT =====
+    function doLogout() { sessionStorage.removeItem('binhs_user'); window.location.href = 'index.html'; }
+    document.getElementById('btnLogout').onclick = doLogout;
+    document.getElementById('topBtnLogout').onclick = doLogout;
+
+    // ===== TOAST =====
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.innerHTML = `<span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => t.classList.add('show'), 10);
+      setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
+    }
+
+    function showPendingSync(pending) {
+      const el = document.getElementById('attendancePendingSync');
+      if (el) {
+        el.style.display = pending ? 'inline-flex' : 'none';
+      }
+    }
+
+    function updateSaveButtonState() {
+      const students = BINHS_DATA.students || [];
+      const hasStudents = students.length > 0;
+      const session = currentSession || getCurrentSessionKey();
+      // Check if any student has a recorded status (Present/Absent/Late) for the current session
+      const hasRecordedStatus = students.some(s => {
+        const entry = attendanceEntries[session]?.[s.lrn];
+        return entry && (entry.status === 'Present' || entry.status === 'Absent' || entry.status === 'Late');
+      });
+      const disabled = !hasStudents || !hasRecordedStatus || isSaving;
+      ['btnSaveAttendanceTop', 'btnSaveAttendanceBottom', 'btnCancelAttendance']
+        .forEach(id => {
+          const btn = document.getElementById(id);
+          if (btn) btn.disabled = disabled;
+        });
+  }
+
+    // ===== API HELPERS =====
+    const stored = sessionStorage.getItem('binhs_user');
+    const apiToken = stored ? JSON.parse(stored).token : null;
+
+    async function apiFetch(path, options = {}) {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...(apiToken ? { 'Authorization': `Bearer ${apiToken}` } : {}), ...(options.headers || {}) }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return response.json();
+    }
+
+    async function loadAttendanceFromServer() {
+      const date = document.getElementById('attendanceDate').value;
+      const subject = document.getElementById('attendanceSubject').value;
+      const sectionSelect = document.getElementById('attendanceSection');
+      const section = sectionSelect.value;
+      if (!date || !section) return;
+
+      currentSession = getCurrentSessionKey();
+      currentSubject = subject === 'All Subjects' ? 'All Subjects' : subject;
+      currentHasAssessmentSession = false;
+
+      const params = new URLSearchParams({ date, section });
+      if (subject && subject !== 'All Subjects') params.append('subject', subject);
+
+      try {
+        const result = await apiFetch(`/api/attendance?${params.toString()}`);
+        if (result.success && Array.isArray(result.attendance)) {
+          currentHasAssessmentSession = !!result.hasAssessmentSession;
+          // Store records under the session key: date + section + subject
+          attendanceEntries[currentSession] = attendanceEntries[currentSession] || {};
+          result.attendance.forEach(row => {
+            attendanceEntries[currentSession][row.lrn] = {
+              status: row.status,
+              absenceType: row.absence_type || '',
+              remarks: row.remarks || ''
+            };
+          });
+          saveStoredData();
+        }
+      } catch (err) {
+        console.warn('[Attendance] Could not load from server:', err.message);
+      }
+      renderAttendance();
+    }
+
+    async function loadStudentsFromServer() {
+      // Try the backend first — MySQL is the authoritative source.
+      try {
+        const result = await apiFetch('/api/students');
+        if (result.success && Array.isArray(result.students)) {
+          // Deduplicate records by LRN
+          const seen = new Set();
+          const uniqueStudents = result.students.filter(s => {
+            if (seen.has(s.lrn)) return false;
+            seen.add(s.lrn);
+            return true;
+          });
+          BINHS_DATA.students = uniqueStudents;
+          BINHS_DATA.syncStatus = 'synced';
+          BINHS_DATA.syncedAt = new Date().toISOString();
+          saveStoredData();
+          window.dispatchEvent(new CustomEvent('binhs_data_synced', { detail: uniqueStudents, synced: true }));
+          console.log('[Attendance] Loaded students from server:', uniqueStudents.length);
+          return uniqueStudents.length;
+        } else {
+          console.warn('[Attendance] Server returned unsuccessful response:', result);
+        }
+      } catch (err) {
+        console.warn('[Attendance] API unavailable, falling back to cached data:', err.message);
+      }
+
+      // Fall back to cached data only if API failed
+      if (BINHS_DATA.students && BINHS_DATA.students.length > 0) {
+        BINHS_DATA.syncStatus = 'cached';
+        BINHS_DATA.syncedAt = null;
+        console.log('[Attendance] Using cached students:', BINHS_DATA.students.length);
+        return BINHS_DATA.students.length;
+      }
+
+      // No API data and no cached data — do not claim synchronization
+      BINHS_DATA.syncStatus = null;
+      BINHS_DATA.syncedAt = null;
+      showToast('Could not load students. Server may be down or session expired.', 'danger');
+      return 0;
+    }
+
+     async function loadLatestAssessmentDate() {
+       const section = document.getElementById('attendanceSection')?.value || '';
+       if (!section || section === 'all') return;
+       try {
+         const result = await apiFetch('/api/academic/latest-assessment-date?section=' + encodeURIComponent(section));
+         if (result.success && result.date) {
+           const dateInput = document.getElementById('attendanceDate');
+           if (dateInput) dateInput.value = result.date;
+         }
+       } catch (e) { console.info('Latest assessment date unavailable:', e.message); }
+     }
+
+     async function saveAttendanceToServer() {
+      const date = document.getElementById('attendanceDate').value;
+      const subjectSelect = document.getElementById('attendanceSubject');
+      const subject = subjectSelect.value;
+      if (!date) { showToast('Please select a date first.', 'danger'); return; }
+
+      const session = currentSession || getCurrentSessionKey();
+      // Only save students with an explicitly recorded status (Present/Absent/Late).
+      // Unrecorded students (status: null) are not saved — they have no attendance
+      // record yet, which correctly represents "no data" rather than falsely
+      // marking them as Present.
+      const records = Object.entries(attendanceEntries[session] || {})
+        .filter(([, entry]) => entry.status === 'Present' || entry.status === 'Absent' || entry.status === 'Late')
+        .map(([lrn, entry]) => ({
+          lrn,
+          subject: subject === 'All Subjects' ? 'General' : subject,
+          date,
+          status: entry.status,
+          absence_type: entry.absenceType || null,
+          remarks: entry.remarks || null
+        }));
+
+      if (!records.length) {
+        showToast('No attendance records to save. Mark student statuses first.', 'danger');
+        return false;
+      }
+
+      try {
+        const result = await apiFetch('/api/attendance', {
+          method: 'POST',
+          body: JSON.stringify({ records })
+        });
+        if (result.success) {
+          showToast(`Attendance saved for ${subject === 'All Subjects' ? 'all subjects' : subject} on ${date}.`, 'success');
+          return true;
+        } else {
+          showToast(result.message || 'Failed to save attendance.', 'danger');
+          return false;
+        }
+      } catch (err) {
+        showToast('Could not save attendance to server.', 'danger');
+        return false;
+      }
+    }
+
+    // ===== ATTENDANCE STATE =====
+    // Tracks attendance entries per session: { [date]: { [section]: { [subject]: { [studentLrn]: {status, absenceType, remarks} } } } }
+    // A "session" is uniquely identified by date + section + subject.
+    function sessionKey(date, section, subject) {
+      return `${date}|||${section}|||${subject}`;
+    }
+    function getCurrentSessionKey() {
+      const date = document.getElementById('attendanceDate')?.value || '';
+      const section = document.getElementById('attendanceSection')?.value || '';
+      const subject = document.getElementById('attendanceSubject')?.value || 'All Subjects';
+      return sessionKey(date, section, subject);
+    }
+    function migrateAttendanceDraft(draft) {
+      if (!draft || typeof draft !== 'object') return {};
+      const keys = Object.keys(draft);
+      if (keys.length > 0) {
+        const firstKey = keys[0];
+        const firstVal = draft[firstKey];
+        if (firstVal && typeof firstVal === 'object' && !Array.isArray(firstVal)) {
+          // New session-keyed format: date|||section|||subject
+          if (firstKey.includes('|||')) {
+            return draft;
+          }
+          // Old format: { [date]: { [lrn]: entry } } — date-only keys
+          if (/^\d{4}-\d{2}-\d{2}$/.test(firstKey)) {
+            return draft;
+          }
+          // Old format: { [subject]: { [lrn]: entry } } — no date/section info, cannot migrate
+          return {};
+        }
+      }
+      return {};
+    }
+    const attendanceEntries = migrateAttendanceDraft(BINHS_DATA.attendanceDraft);
+    let currentSubject = 'All Subjects'; // Track current subject for per-subject attendance
+    let currentSession = null; // Cached session key for the current date/section/subject
+    let currentHasAssessmentSession = false; // Whether current date/section/subject has an assessment session
+    let isSaving = false; // True while a save request is in flight
+
+    function getAttendanceDateLabel() {
+      const val = document.getElementById('attendanceDate').value;
+      if (!val) return 'Select a date';
+      return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric', weekday: 'long' }).format(new Date(`${val}T00:00:00`));
+    }
+
+    function updateAttendanceControls() {
+      const students = BINHS_DATA.students || [];
+      const hasStudents = students.length > 0;
+      const sections = [...new Set(students.map(student => student.section).filter(Boolean))];
+      const sectionSelect = document.getElementById('attendanceSection');
+      const gradeSelect = document.getElementById('attendanceGradeLevel');
+      const schoolYearSelect = document.getElementById('attendanceSchoolYear');
+      const rosterSection = document.getElementById('attendanceRosterSection');
+
+      ['btnMarkAllPresent', 'btnCancelAttendance']
+        .forEach(id => { document.getElementById(id).disabled = !hasStudents; });
+      updateSaveButtonState();
+
+      if (!hasStudents) {
+        sectionSelect.innerHTML = '<option>No section yet</option>';
+        gradeSelect.innerHTML = '<option>No roster yet</option>';
+        schoolYearSelect.innerHTML = '<option>No roster yet</option>';
+        sectionSelect.disabled = gradeSelect.disabled = schoolYearSelect.disabled = true;
+        rosterSection.textContent = 'Import students to begin.';
+        return;
+      }
+
+      sectionSelect.innerHTML = sections.map(section => `<option>${esc(section)}</option>`).join('');
+      gradeSelect.innerHTML = '<option>Imported students</option>';
+      schoolYearSelect.innerHTML = '<option>Current school year</option>';
+      sectionSelect.disabled = gradeSelect.disabled = schoolYearSelect.disabled = false;
+      rosterSection.textContent = sections.join(', ');
+    }
+
+    function getEntry(student, date, section, subject) {
+      const key = sessionKey(date, section, subject);
+      const entry = attendanceEntries[key]?.[student.lrn];
+      if (!entry) {
+        attendanceEntries[key] = attendanceEntries[key] || {};
+        // Default status: Present for new attendance sessions.
+        // Previously saved records (Absent/Late) are preserved via loadAttendanceFromServer().
+        attendanceEntries[key][student.lrn] = {
+          status: 'Present',
+          absenceType: '',
+          remarks: ''
+        };
+      }
+      return attendanceEntries[key][student.lrn];
+    }
+
+    function esc(v) { return String(v || '').replace(/[&<>'"/]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;','/':'&#x2F;'})[c]); }
+    function opt(cur, val) { return `<option value="${val}"${cur === val ? ' selected' : ''}>${val}</option>`; }
+
+    function renderAttendance() {
+      const tbody = document.getElementById('attendanceTableBody');
+      if (!tbody) return;
+      updateAttendanceControls();
+      tbody.innerHTML = '';
+      let present = 0, absent = 0, late = 0;
+      const absentStudents = [];
+
+      const date = document.getElementById('attendanceDate')?.value || '';
+      const section = document.getElementById('attendanceSection')?.value || '';
+      const subject = document.getElementById('attendanceSubject')?.value || 'All Subjects';
+      const session = sessionKey(date, section, subject);
+
+      if (BINHS_DATA.students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="attendance-empty-state">No students yet. Import a CSV from Student Management to create an attendance roster.</td></tr>';
+      }
+
+      BINHS_DATA.students.forEach((student, index) => {
+        const entry = getEntry(student, date, section, subject);
+        if (entry.status === 'Absent') { absent++; absentStudents.push({ student, entry }); }
+        else if (entry.status === 'Late') late++;
+        else if (entry.status === 'Present') present++;
+        // null status = unrecorded, not counted in any category
+
+        // Build status select options: blank option first when unrecorded
+        let statusOptions;
+        if (entry.status === null) {
+          statusOptions = `<option value="">--</option>${opt('Present','Present')}${opt('Absent','Absent')}${opt('Late','Late')}`;
+        } else {
+          statusOptions = `${opt(entry.status,'Present')}${opt(entry.status,'Absent')}${opt(entry.status,'Late')}`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td class="font-mono" style="font-size:11.5px;">${esc(student.lrn)}</td>
+          <td><strong>${esc(student.firstName)} ${esc(student.lastName)}</strong></td>
+          <td><select class="attendance-status-select status-${(entry.status || 'unrecorded').toLowerCase()}" data-lrn="${student.lrn}">${statusOptions}</select></td>
+          <td><select class="attendance-type-select" data-lrn="${student.lrn}"${entry.status !== 'Absent' ? ' disabled' : ''}><option value="">-</option>${opt(entry.absenceType,'Excused')}${opt(entry.absenceType,'Unexcused')}</select></td>
+          <td><input class="attendance-remark-input" data-lrn="${student.lrn}" value="${esc(entry.remarks)}" placeholder="-"></td>`;
+        tbody.appendChild(tr);
+      });
+
+      const total = BINHS_DATA.students.length;
+      const pct = v => `${total ? ((v / total) * 100).toFixed(1) : 0}%`;
+      document.getElementById('attPresentCount').textContent = present;
+      document.getElementById('attAbsentCount').textContent = absent;
+      document.getElementById('attLateCount').textContent = late;
+      document.getElementById('attTotalCount').textContent = total;
+      document.getElementById('attPresentPercent').textContent = pct(present);
+      document.getElementById('attAbsentPercent').textContent = pct(absent);
+      document.getElementById('attLatePercent').textContent = pct(late);
+      document.getElementById('attAbsentLabel').textContent = `(${absent})`;
+      document.getElementById('attendanceRosterTitle').textContent = `Attendance for ${getAttendanceDateLabel()}`;
+      document.getElementById('attendanceSummaryTitle').textContent = `Attendance Summary`;
+
+      const absentList = document.getElementById('absentStudentsList');
+      absentList.innerHTML = absentStudents.length
+        ? absentStudents.map(({ student, entry }) => `
+            <div class="absent-student-item">
+              <span class="absent-student-avatar">${esc(student.firstName[0])}</span>
+              <span class="absent-student-name">${esc(student.firstName)} ${esc(student.lastName)}</span>
+              <span class="absence-type-badge ${entry.absenceType === 'Excused' ? 'excused' : 'unexcused'}">${entry.absenceType || 'Unexcused'}</span>
+            </div>`).join('')
+        : '<p class="absence-empty">No students are marked absent.</p>';
+
+      // Status change handlers
+      tbody.querySelectorAll('.attendance-status-select').forEach(sel => {
+        sel.onchange = () => {
+          if (attendanceEntries[session]) {
+            attendanceEntries[session][sel.dataset.lrn].status = sel.value;
+            if (sel.value !== 'Absent') attendanceEntries[session][sel.dataset.lrn].absenceType = '';
+          }
+          renderAttendance();
+        };
+      });
+      tbody.querySelectorAll('.attendance-type-select').forEach(sel => {
+        sel.onchange = () => {
+          if (attendanceEntries[session]) {
+            attendanceEntries[session][sel.dataset.lrn].absenceType = sel.value;
+          }
+        };
+      });
+      tbody.querySelectorAll('.attendance-remark-input').forEach(input => {
+        input.onchange = () => {
+          if (attendanceEntries[session]) {
+            attendanceEntries[session][input.dataset.lrn].remarks = input.value;
+          }
+        };
+      });
+    }
+
+    async function saveAttendance() {
+      if (isSaving) return; // Prevent duplicate simultaneous submissions
+      const date = document.getElementById('attendanceDate').value;
+      const subjectSelect = document.getElementById('attendanceSubject');
+      const subject = subjectSelect.value;
+      // Update current subject tracker
+      currentSubject = subject === 'All Subjects' ? 'All Subjects' : subject;
+      currentSession = getCurrentSessionKey();
+      currentHasAssessmentSession = false; // Reset until loadAttendanceFromServer confirms
+      if (!date) { showToast('Please select a date first.', 'danger'); return; }
+
+      isSaving = true;
+      updateSaveButtonState();
+      showPendingSync(true);
+
+      try {
+        // Save to backend first (authoritative source)
+        const serverOk = await saveAttendanceToServer();
+        if (!serverOk) {
+          // Server failed: persist draft locally for recovery, show pending-sync state
+          BINHS_DATA.attendanceDraft = JSON.parse(JSON.stringify(attendanceEntries));
+          saveStoredData();
+          showToast('Attendance not saved to server. Draft preserved locally — will sync when connection is restored.', 'danger');
+          showPendingSync(true);
+          return;
+        }
+
+        // Server succeeded: persist confirmed state locally as cache
+        BINHS_DATA.attendanceDraft = JSON.parse(JSON.stringify(attendanceEntries));
+        saveStoredData();
+        showPendingSync(false);
+      } finally {
+        isSaving = false;
+        updateSaveButtonState();
+      }
+    }
+
+    // ===== LOGOUT HANDLER =====
+    function doLogout() {
+      sessionStorage.removeItem('binhs_user');
+      window.location.href = 'index.html';
+    }
+    // ===== EVENT BINDINGS =====
+    document.getElementById('btnMarkAllPresent').onclick = () => {
+      const session = currentSession || getCurrentSessionKey();
+      attendanceEntries[session] = attendanceEntries[session] || {};
+      BINHS_DATA.students.forEach(s => {
+        attendanceEntries[session][s.lrn] = { status: 'Present', absenceType: '', remarks: '' };
+      });
+      renderAttendance();
+      showToast('All students marked as Present.', 'success');
+    };
+    document.getElementById('btnSaveAttendanceTop').onclick = saveAttendance;
+    document.getElementById('btnSaveAttendanceBottom').onclick = saveAttendance;
+    document.getElementById('btnLogout').onclick = doLogout;
+document.getElementById('topBtnLogout').onclick = doLogout;
+    document.getElementById('btnCancelAttendance').onclick = () => {
+      const session = currentSession || getCurrentSessionKey();
+      // Clear current session's attendance entries
+      if (attendanceEntries[session]) {
+        Object.keys(attendanceEntries[session]).forEach(k => delete attendanceEntries[session][k]);
+      }
+      // Restore from draft for current session if available
+      const draftEntries = BINHS_DATA.attendanceDraft || {};
+      if (draftEntries[session]) {
+        attendanceEntries[session] = JSON.parse(JSON.stringify(draftEntries[session]));
+      } else {
+        // Initialize fresh entries for current session
+        attendanceEntries[session] = {};
+        const students = BINHS_DATA.students || [];
+        students.forEach(student => {
+          attendanceEntries[session][student.lrn] = { status: 'Present', absenceType: '', remarks: '' };
+        });
+      }
+      renderAttendance();
+      showToast('Attendance changes reverted to last saved state.', 'info');
+    };
+    document.getElementById('attendanceDate').onchange = loadAttendanceFromServer;
+    document.getElementById('attendanceSubject').onchange = loadAttendanceFromServer;
+    document.getElementById('attendanceSection').onchange = async () => { await loadLatestAssessmentDate(); loadAttendanceFromServer(); };
+
+    // The student list is loaded asynchronously from MySQL. Re-render when it
+    // changes and discard any draft entries for students that no longer exist.
+    window.addEventListener('binhs_data_synced', () => {
+      const activeLrns = new Set(BINHS_DATA.students.map(student => student.lrn));
+      let removedDraftEntries = false;
+      Object.keys(attendanceEntries).forEach(sessionKey => {
+        Object.keys(attendanceEntries[sessionKey]).forEach(lrn => {
+          if (!activeLrns.has(lrn)) {
+            delete attendanceEntries[sessionKey][lrn];
+            removedDraftEntries = true;
+          }
+        });
+      });
+      if (removedDraftEntries) {
+        BINHS_DATA.attendanceDraft = JSON.parse(JSON.stringify(attendanceEntries));
+        saveStoredData();
+      }
+      renderAttendance();
+    });
+
+    // ===== PHILIPPINES LOCAL DATE HELPER =====
+    // Philippines is UTC+8. Using toISOString() directly converts to UTC,
+    // which shifts the date backward for local times before 08:00 UTC
+    // (e.g., Nov 5 00:00-07:59 PH becomes Nov 4 16:00-23:59 UTC).
+    function getPhilippinesDateString() {
+      const now = new Date();
+      // Add 8 hours to UTC to get Philippines local time
+      const manilaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      const year = manilaTime.getUTCFullYear();
+      const month = String(manilaTime.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(manilaTime.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', async () => {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      document.getElementById('attendanceDate').value = getPhilippinesDateString();
+      window.scrollTo(0, 0);
+       await loadAcademicTermDates();
+       const count = await loadStudentsFromServer();  // load students from API
+       await loadLatestAssessmentDate();
+       renderAttendance();              // show students immediately (or empty state)
+      if (count === 0) {
+        showToast('No students found. Please import students from Student Management first.', 'warning');
+      }
+      loadAttendanceFromServer();      // then merge any saved server records
+    });
+
+    // ==================== NOTIFICATIONS (shared module) ====================
+    BINHS_Notifications.init({
+      bellBtnId: 'attBellBtn',
+      dropdownId: 'attNotifDropdown',
+      badgeId: 'attBellBadge',
+      badgePillId: 'attNotifBadgePill',
+      listId: 'attNotifDropdownList',
+      onNotificationClick: (logId, notification) => {
+        BINHS_Notifications.markAsRead(logId);
+        window.location.href = 'academic-records.html';
+      }
+    });
+  </script>
+</body>
+</html>
